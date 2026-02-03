@@ -31,7 +31,7 @@ export class Game {
 
         // Load Background
         this.bgImage = new Image();
-        this.bgImage.src = 'assets/background.jpg';
+        this.bgImage.src = 'assets/WhatsApp Image 2026-02-03 at 14.07.19.jpeg';
 
         // Spawn some enemies
         this.spawnEnemy(500, 272); // 400 (ground) - 128 (height)
@@ -57,6 +57,10 @@ export class Game {
     }
 
     private update(deltaTime: number, now: number) {
+        if (this.toggleCooldown > 0) {
+            this.toggleCooldown -= deltaTime;
+        }
+
         if (this.gameState === GameState.START_SCREEN) {
             // Check for start input (Enter or Click on button area - simplified to any key/click for now or Enter)
             if (this.input.isDown('Enter') || this.input.isDown('Space')) {
@@ -77,12 +81,17 @@ export class Game {
             }
         }
 
+        // Toggle Character Input
+        if (this.input.isDown('KeyX')) {
+            this.handleToggleInput();
+        }
+
         // Bullets Update & Cleanup
         this.bullets.forEach(b => b.update(deltaTime));
         this.bullets = this.bullets.filter(b => b.active);
 
         // Enemies Update
-        this.enemies.forEach(e => e.update(deltaTime));
+        this.enemies.forEach(e => e.update(deltaTime, this.player.x));
         this.enemies = this.enemies.filter(e => e.active);
 
         // Collisions
@@ -100,14 +109,51 @@ export class Game {
             }
         }
 
+        // Punch vs Enemies (Melee)
+        // Only check if player is punching and we haven't hit this punch yet (debounce per keypress/state cycle needed)
+        // For simplicity, we'll check overlap + active punch + cooldown.
+        // Assuming update loop runs every frame, we need to limit damage to once per 'attack'.
+        // Since we don't have complex attack state tracking, we'll use a simple cooldown.
+        if (this.player.isPunching()) {
+            this.handlePunchDamage();
+        }
+
         // Enemies vs Player (Simple Reset)
         for (const enemy of this.enemies) {
             if (enemy.active && this.isColliding(this.player, enemy)) {
                 // Game Over or Damage logic
-                // For now, just knock player back
-                this.player.x = 0;
+                // For now, just logging hit, removed reset to spawn
                 console.log("Player hit!");
             }
+        }
+    }
+
+    private lastPunchTime: number = 0;
+    private punchCooldown: number = 400; // ms
+
+    private handlePunchDamage() {
+        const now = Date.now();
+        if (now - this.lastPunchTime < this.punchCooldown) return;
+
+        // Define Punch Hitbox (In front of player)
+        const range = 60;
+        const hitbox = {
+            x: this.player.facing === 1 ? this.player.x + this.player.width : this.player.x - range,
+            y: this.player.y,
+            width: range,
+            height: this.player.height
+        };
+
+        let hit = false;
+        for (const enemy of this.enemies) {
+            if (enemy.active && this.isColliding(hitbox, enemy)) {
+                enemy.takeDamage(1); // Punch deals 1 damage (or more)
+                hit = true;
+            }
+        }
+
+        if (hit) {
+            this.lastPunchTime = now;
         }
     }
 
@@ -171,5 +217,12 @@ export class Game {
         this.ctx.font = '16px "Press Start 2P"';
         this.ctx.textAlign = 'left';
         this.ctx.fillText("F: Shoot", 10, 30);
+    }
+
+    private toggleCooldown: number = 0;
+    private handleToggleInput() {
+        if (this.toggleCooldown > 0) return;
+        this.player.toggleCharacter();
+        this.toggleCooldown = 500; // 500ms debounce
     }
 }

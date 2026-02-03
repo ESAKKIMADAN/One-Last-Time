@@ -9,14 +9,14 @@ export class Player extends Entity {
     private jumpStrength: number = -12;
     private speed: number = 4;
     private grounded: boolean = false;
-    private facing: number = 1; // 1 Right, -1 Left
+    public facing: number = 1; // 1 Right, -1 Left
     private lastShotTime: number = 0;
     private fireRate: number = 250; // ms
 
     // Animation Props
     private images: HTMLImageElement[] = [];
     private gameFrame: number = 0;
-    private staggerFrames: number = 7;
+    private staggerFrames: number = 15; // Slower animation (was 7)
     private currentFrameIndex: number = 0;
     private state: AnimationState = AnimationState.IDLE;
 
@@ -30,7 +30,8 @@ export class Player extends Entity {
     // 11: Showing Gun
     // 12: Shooting Gun
 
-    private animationMap: any = {
+    // Old Map
+    private defaultAnimationMap: any = {
         [AnimationState.IDLE]: [1],
         [AnimationState.RUN]: [2, 3, 4, 5, 6],
         [AnimationState.JUMP]: [7],    // Start Jump (Rising)
@@ -38,6 +39,18 @@ export class Player extends Entity {
         [AnimationState.SHOOT]: [10, 11, 12, 12], // Take -> Show -> Fire -> Recoil
         [AnimationState.RUN_SHOOT]: [11]
     };
+
+    private altAnimationMap: any = {
+        [AnimationState.IDLE]: [222],
+        [AnimationState.RUN]: [111, 222],
+        [AnimationState.JUMP]: [333],
+        [AnimationState.FALL]: [333],
+        [AnimationState.SHOOT]: [444, 555],
+        [AnimationState.RUN_SHOOT]: [444, 555]
+    };
+
+    private animationMap: any = this.defaultAnimationMap;
+    private isAltSkin: boolean = false;
 
     constructor(x: number, y: number) {
         super(x, y, 64, 128); // Keep 64x128 hitbox
@@ -48,6 +61,23 @@ export class Player extends Entity {
             img.src = `assets/player/${i}.png`;
             this.images[i] = img; // Store at index matching filename
         }
+
+        // Preload Alt images
+        const altImages = [111, 222, 333, 444, 555];
+        altImages.forEach(i => {
+            const img = new Image();
+            img.src = `assets/player/${i}.png`;
+            this.images[i] = img;
+        });
+    }
+
+    public toggleCharacter() {
+        this.isAltSkin = !this.isAltSkin;
+        this.animationMap = this.isAltSkin ? this.altAnimationMap : this.defaultAnimationMap;
+
+        // Reset to Idle immediately to prevent 1-frame glitch where old frame renders with new skin flags
+        this.state = AnimationState.IDLE;
+        this.currentFrameIndex = this.animationMap[this.state][0];
     }
 
     update(dt: number, input: InputHandler): any | null {
@@ -123,8 +153,15 @@ export class Player extends Entity {
         return null;
     }
 
+    // Check if currently punching (Alt skin + Shoot state)
+    isPunching(): boolean {
+        return this.isAltSkin && this.state === AnimationState.SHOOT;
+    }
+
     // Explicit shoot method
     shoot(now: number): any | null {
+        if (this.isAltSkin) return null; // Alt skin cannot shoot bullets
+
         if (now - this.lastShotTime > this.fireRate) {
             this.lastShotTime = now;
             return { x: this.x + (this.facing === 1 ? this.width : 0), y: this.y + 40, dir: this.facing };
@@ -142,18 +179,35 @@ export class Player extends Entity {
         // Center image on hitbox. Assumes images are roughly same size or centered.
         // If images vary in size, we might need per-frame offsets, but let's assume centered.
         // Using image.naturalWidth provided they are loaded
-        const w = img.naturalWidth || 128; // Fallbacks
-        const h = img.naturalHeight || 144;
+        let w = img.naturalWidth || 128; // Fallbacks
+        let h = img.naturalHeight || 144;
+
+        if (this.isAltSkin) {
+            // Force scale down for HD assets - making it even smaller as requested
+            // Wider (64 -> 69) and Shorter (128 -> 120 -> 116)
+            w = 69;
+            h = 116;
+        } else {
+            // Original Skin: Increase height by 5px
+            h = (img.naturalHeight || 144) + 5;
+        }
 
         const diffX = (w - this.width) / 2;
         const diffY = (h - this.height);
 
         ctx.save();
-        if (this.facing === -1) {
+
+        let flip = this.facing === -1;
+        // Invert flip for Alt Skin specific states (Jump/Punch assets might be facing opposite default)
+        if (this.isAltSkin && (this.state === AnimationState.JUMP || this.state === AnimationState.FALL || this.state === AnimationState.SHOOT)) {
+            flip = !flip;
+        }
+
+        if (flip) {
             ctx.scale(-1, 1);
-            ctx.drawImage(img, -drawX - this.width - diffX, drawY - diffY);
+            ctx.drawImage(img, -drawX - this.width - diffX, drawY - diffY, w, h);
         } else {
-            ctx.drawImage(img, drawX - diffX, drawY - diffY);
+            ctx.drawImage(img, drawX - diffX, drawY - diffY, w, h);
         }
         ctx.restore();
     }
