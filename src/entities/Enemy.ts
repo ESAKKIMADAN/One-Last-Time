@@ -1,8 +1,8 @@
 import { Entity } from './Entity';
 
 export class Enemy extends Entity {
-    private speed: number = 2;
-    private direction: number = 1;
+    protected speed: number = 0.5;
+    protected direction: number = 1;
     public maxHealth: number = 5;
     public health: number = 5;
     public active: boolean = true;
@@ -11,16 +11,23 @@ export class Enemy extends Entity {
         super(x, y, 64, 128); // Same size as player
     }
 
-    update(dt: number, playerX: number): void {
+    update(dt: number, playerX: number, playerY: number): void {
         const timeScale = dt / (1000 / 60);
 
-        // Follow Player Logic
-        const distance = playerX - this.x;
+        // Follow Player Logic (X Axis)
+        const dx = playerX - this.x;
+        const dy = playerY - this.y;
         const stopDistance = 5; // Don't stack exactly on top
 
-        if (Math.abs(distance) > stopDistance) {
-            this.direction = distance > 0 ? 1 : -1;
+        if (Math.abs(dx) > stopDistance) {
+            this.direction = dx > 0 ? 1 : -1;
             this.x += this.speed * this.direction * timeScale;
+        }
+
+        // Follow Player Logic (Y Axis - Depth)
+        if (Math.abs(dy) > stopDistance) {
+            const yDir = dy > 0 ? 1 : -1;
+            this.y += (this.speed * 0.5) * yDir * timeScale; // Slower Y speed
         }
     }
 

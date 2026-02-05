@@ -3,6 +3,8 @@ export class InputHandler {
 
     constructor() {
         window.addEventListener('keydown', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
             this.keys[e.code] = true;
         });
 

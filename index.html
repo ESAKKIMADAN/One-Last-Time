@@ -13,7 +13,50 @@
 
 <body>
   <div id="app">
-    <canvas id="gameCanvas"></canvas>
+    <div id="game-container">
+      <canvas id="gameCanvas"></canvas>
+      <button id="btn-trophy">🏆</button>
+      <div id="ui-layer">
+        <div id="start-screen-ui">
+          <div id="leaderboard-container" style="display: none;">
+            <h3>LEADERBOARD</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>NAME</th>
+                  <th>SCORE</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+                <tr>
+                  <td colspan="3">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="auth-container">
+            <div class="tabs">
+              <button id="tab-login" class="active">LOGIN</button>
+              <button id="tab-register">REGISTER</button>
+            </div>
+
+            <form id="login-form">
+              <input type="text" id="login-email" placeholder="USERNAME" required />
+              <input type="password" id="login-password" placeholder="PASSWORD" required />
+              <button type="submit">START</button>
+            </form>
+
+            <form id="register-form" style="display: none;">
+              <input type="text" id="register-email" placeholder="USERNAME" required />
+              <input type="password" id="register-password" placeholder="PASSWORD" required />
+              <button type="submit">REGISTER</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

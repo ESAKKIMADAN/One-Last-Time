@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark light;
-  background-color: #242424;
+  background-color: rgba(255, 255, 255, 0.01);
 }
 
 body {
@@ -21,12 +21,218 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: rgba(255, 255, 255, 0.01);
+  /* Dark background for the "webscreen" */
 }
 
 canvas {
-  width: 100%;
-  height: 100%;
+  /* Fixed size is controlled by width/height attributes in HTML/JS, 
+     but we can set a max-width for responsiveness if needed. 
+     For pixel art, we want strict crisp edges. */
   display: block;
   image-rendering: pixelated;
-  /* Vital for pixel art */
+  display: block;
+  image-rendering: pixelated;
+}
+
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* Let clicks pass through to canvas if needed, but we enable for children */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#start-screen-ui {
+  display: flex;
+  gap: 50px;
+  pointer-events: auto;
+  font-family: 'Press Start 2P', monospace;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  /* Removed margin-top for true centering */
+}
+
+/* Leaderboard */
+#leaderboard-container {
+  background: #2d2d2d;
+  /* Solid Grey */
+  border: 4px solid #fff;
+  padding: 20px;
+  color: #fff;
+  min-width: 300px;
+}
+
+#leaderboard-container h3 {
+  text-align: center;
+  color: #fca5a5;
+  /* Light Red */
+  margin-top: 0;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 2px solid #555;
+  color: #fff;
+  /* Ensure text is white */
+}
+
+th {
+  color: #6ee7b7;
+  /* Green */
+}
+
+/* Auth Container */
+#auth-container {
+  background: #2d2d2d;
+  /* Solid Grey */
+  border: 4px solid #fff;
+  padding: 20px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Optional: nice shadow */
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.tabs button {
+  background: none;
+  border: none;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  padding-bottom: 5px;
+}
+
+.tabs button.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+input {
+  background: #222;
+  border: 2px solid #555;
+  color: #fff;
+  padding: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #fff;
+}
+
+button[type="submit"] {
+  background: #2563eb;
+  /* Blue */
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button[type="submit"]:hover {
+  background: #1d4ed8;
+}
+
+.divider {
+  height: 2px;
+  background: #555;
+  width: 100%;
+}
+
+.secondary-btn {
+  background: transparent;
+  border: 2px solid #aaa;
+  color: #aaa;
+  padding: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.secondary-btn:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+#btn-hide-leaderboard {
+  width: auto;
+  margin-bottom: 20px;
+  font-size: 10px;
+  padding: 5px 10px;
+}
+
+#game-container {
+  position: relative;
+  width: 800px;
+  /* Fixed resolution matches canvas */
+  height: 450px;
+  border: 4px solid white;
+  /* The "Frame" */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#btn-trophy {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: #2d2d2d;
+  border: 4px solid #fff;
+  color: #fbbf24;
+  /* Gold */
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+}
+
+#btn-trophy:hover {
+  background: #444;
+}
+
+margin-bottom: 20px;
+font-size: 10px;
+padding: 5px 10px;
 }

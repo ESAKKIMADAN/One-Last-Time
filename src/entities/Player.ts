@@ -5,13 +5,16 @@ import { AnimationState } from '../enums/AnimationState';
 export class Player extends Entity {
     private velocityX: number = 0;
     private velocityY: number = 0;
-    private gravity: number = 0.5;
-    private jumpStrength: number = -12;
     private speed: number = 4;
-    private grounded: boolean = false;
     public facing: number = 1; // 1 Right, -1 Left
     private lastShotTime: number = 0;
     private fireRate: number = 250; // ms
+
+    public maxHealth: number = 100;
+    public health: number = 100;
+    private invulnerable: boolean = false;
+    private invulnerabilityDuration: number = 1000;
+    private lastDamageTime: number = 0;
 
     // Animation Props
     private images: HTMLImageElement[] = [];
@@ -49,11 +52,11 @@ export class Player extends Entity {
         [AnimationState.RUN_SHOOT]: [444, 555]
     };
 
-    private animationMap: any = this.defaultAnimationMap;
-    private isAltSkin: boolean = false;
+    private animationMap: any = this.altAnimationMap;
+    private isAltSkin: boolean = true;
 
     constructor(x: number, y: number) {
-        super(x, y, 64, 128); // Keep 64x128 hitbox
+        super(x, y, 77, 173); // Increased size: 77x173 (1.2x of 64x144)
 
         // Preload images 1 through 12
         for (let i = 1; i <= 12; i++) {
@@ -80,7 +83,7 @@ export class Player extends Entity {
         this.currentFrameIndex = this.animationMap[this.state][0];
     }
 
-    update(dt: number, input: InputHandler): any | null {
+    update(dt: number, input: InputHandler, mapWidth: number): any | null {
         const timeScale = dt / (1000 / 60);
 
         // State determination
@@ -105,35 +108,37 @@ export class Player extends Entity {
             isMoving = true;
         }
 
-        // Jumping
-        if ((input.isDown('Space') || input.isDown('KeyW') || input.isDown('ArrowUp')) && this.grounded) {
-            this.velocityY = this.jumpStrength;
-            this.grounded = false;
+        // Vertical Movement (Depth)
+        this.velocityY = 0;
+        if (input.isDown('KeyW') || input.isDown('ArrowUp')) {
+            this.velocityY = -this.speed * 0.7; // Slightly slower Y movement for perspective
+            isMoving = true;
         }
-
-        // Gravity
-        this.velocityY += this.gravity * timeScale;
+        if (input.isDown('KeyS') || input.isDown('ArrowDown')) {
+            this.velocityY = this.speed * 0.7;
+            isMoving = true;
+        }
 
         // Apply Position
         this.x += this.velocityX * timeScale;
         this.y += this.velocityY * timeScale;
 
-        // Simple Floor Collision
-        if (this.y + this.height > 400) {
-            this.y = 400 - this.height;
-            this.velocityY = 0;
-            this.grounded = true;
-        }
+        // X Boundaries
+        if (this.x < 0) this.x = 0;
+        if (this.x > mapWidth - this.width) this.x = mapWidth - this.width;
+
+        // Y Boundaries (Floor Depth)
+        // Adjust these values to match the visual floor of the background
+        const floorTop = 300;     // Back of the room (feet pos)
+        const floorBottom = 580;  // Front of the room (feet pos)
+
+        // Constrain feet (y + height) to floor area
+        if (this.y + this.height < floorTop) this.y = floorTop - this.height;
+        if (this.y + this.height > floorBottom) this.y = floorBottom - this.height;
 
         // Update Animation State
         if (isShooting) {
             this.state = AnimationState.SHOOT;
-        } else if (!this.grounded) {
-            if (this.velocityY >= 0) {
-                this.state = AnimationState.FALL;
-            } else {
-                this.state = AnimationState.JUMP;
-            }
         } else if (isMoving) {
             this.state = AnimationState.RUN;
         } else {
@@ -164,7 +169,7 @@ export class Player extends Entity {
 
         if (now - this.lastShotTime > this.fireRate) {
             this.lastShotTime = now;
-            return { x: this.x + (this.facing === 1 ? this.width : 0), y: this.y + 40, dir: this.facing };
+            return { x: this.x + (this.facing === 1 ? this.width : 0), y: this.y + 48, dir: this.facing };
         }
         return null;
     }
@@ -176,21 +181,27 @@ export class Player extends Entity {
         const drawX = Math.floor(this.x);
         const drawY = Math.floor(this.y);
 
-        // Center image on hitbox. Assumes images are roughly same size or centered.
-        // If images vary in size, we might need per-frame offsets, but let's assume centered.
-        // Using image.naturalWidth provided they are loaded
-        let w = img.naturalWidth || 128; // Fallbacks
+        // Base dimensions
+        let w = img.naturalWidth || 128;
         let h = img.naturalHeight || 144;
 
         if (this.isAltSkin) {
-            // Force scale down for HD assets - making it even smaller as requested
-            // Wider (64 -> 69) and Shorter (128 -> 120 -> 116)
-            w = 69;
-            h = 116;
+            // "Same height as another" -> Target standard height (approx 128)
+            const targetHeight = 143; // 119 * 1.2
+            const naturalW = img.naturalWidth || 69;
+            const naturalH = img.naturalHeight || 116;
+            const aspectRatio = naturalW / naturalH;
+
+            h = targetHeight;
+            w = h * aspectRatio;
         } else {
-            // Original Skin: Increase height by 5px
             h = (img.naturalHeight || 144) + 5;
         }
+
+        // Apply Scaling to match new hitbox size
+        const scale = 1.2;
+        w *= scale;
+        h *= scale;
 
         const diffX = (w - this.width) / 2;
         const diffY = (h - this.height);
@@ -198,7 +209,7 @@ export class Player extends Entity {
         ctx.save();
 
         let flip = this.facing === -1;
-        // Invert flip for Alt Skin specific states (Jump/Punch assets might be facing opposite default)
+        // Invert flip for Alt Skin specific states
         if (this.isAltSkin && (this.state === AnimationState.JUMP || this.state === AnimationState.FALL || this.state === AnimationState.SHOOT)) {
             flip = !flip;
         }
@@ -210,5 +221,28 @@ export class Player extends Entity {
             ctx.drawImage(img, drawX - diffX, drawY - diffY, w, h);
         }
         ctx.restore();
+    }
+
+    public takeDamage(amount: number) {
+        if (this.invulnerable) return;
+
+        this.health -= amount;
+        if (this.health < 0) this.health = 0;
+
+        this.invulnerable = true;
+        this.lastDamageTime = Date.now();
+        console.log(`Player Health: ${this.health}`);
+
+        // Simple knockback
+        this.velocityY = -5;
+        this.velocityX = -5 * this.facing;
+    }
+
+    public updateInvulnerability() {
+        if (this.invulnerable) {
+            if (Date.now() - this.lastDamageTime > this.invulnerabilityDuration) {
+                this.invulnerable = false;
+            }
+        }
     }
 }

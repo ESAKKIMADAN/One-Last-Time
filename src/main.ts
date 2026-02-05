@@ -8,7 +8,7 @@ window.addEventListener('error', (event) => {
 try {
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) throw new Error("Canvas element not found");
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("2D Context not found");
 

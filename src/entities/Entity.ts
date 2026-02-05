@@ -11,6 +11,6 @@ export abstract class Entity {
         this.height = height;
     }
 
-    abstract update(dt: number, input?: any): void;
+    abstract update(dt: number, ...args: any[]): void;
     abstract draw(ctx: CanvasRenderingContext2D): void;
 }
