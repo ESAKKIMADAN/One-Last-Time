@@ -445,15 +445,10 @@ export class Game {
         this.healthPickups.forEach(hp => hp.update(deltaTime));
         this.healthPickups = this.healthPickups.filter(hp => hp.active);
 
-        // Random Spawn (Example: 0.1% chance per frame => ~1 every 16s at 60fps)
-        // Only spawn if fewer than 2 exist to prevent clutter
-        if (this.healthPickups.length < 2 && Math.random() < 0.001) {
-            const x = 50 + Math.random() * (this.canvas.width - 100); // Random X
-            const y = 350; // Ground level-ish (adjust as needed contextually)
-            // Adding a bit of "camera" offset awareness would be good if map is large, 
-            // but for now spawn within visible or slightly off-screen is fine.
-            // Actually, let's spawn relative to player or just in random spot
-            this.healthPickups.push(new HealthPickup(this.player.x + (Math.random() * 600 - 300), 380));
+        // Random Spawn (Example: 1% chance per frame)
+        if (this.healthPickups.length < 3 && Math.random() < 0.01) {
+            const x = 50 + Math.random() * (this.canvas.width - 100); 
+             this.healthPickups.push(new HealthPickup(x, 350));
         }
 
         // Floating Texts Update

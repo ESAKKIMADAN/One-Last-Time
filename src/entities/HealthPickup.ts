@@ -20,7 +20,7 @@ export class HealthPickup extends Entity {
         };
     }
 
-    update(dt: number) {
+    update(_dt: number) {
         // Floating animation?
         this.y += Math.sin(Date.now() / 200) * 0.5;
     }
