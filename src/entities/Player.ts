@@ -176,7 +176,7 @@ export class Player extends Entity {
 
     draw(ctx: CanvasRenderingContext2D): void {
         const img = this.images[this.currentFrameIndex];
-        if (!img) return;
+        if (!img || !img.complete || img.naturalWidth === 0) return;
 
         const drawX = Math.floor(this.x);
         const drawY = Math.floor(this.y);

@@ -28,7 +28,7 @@ export class HealthPickup extends Entity {
     draw(ctx: CanvasRenderingContext2D) {
         if (!this.active) return;
 
-        if (this.image.complete) {
+        if (this.image.complete && this.image.naturalWidth > 0) {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
             // Fallback for loading
