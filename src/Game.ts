@@ -70,8 +70,8 @@ export class Game {
         this.dialogueImage.src = 'assets/player/222.png';
 
         // Load SFX
-        this.shootSound = new Audio('assets/sounds/shoot.mp3');
-        this.punchSound = new Audio('assets/sounds/punch.mp3');
+        this.shootSound = new Audio('assets/sounds/Gun.mp3');
+        this.punchSound = new Audio('assets/sounds/Punch.mp3');
 
 
         // Spawn some enemies
