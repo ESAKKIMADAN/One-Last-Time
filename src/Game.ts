@@ -26,6 +26,9 @@ export class Game {
     private bgImage: HTMLImageElement; // Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
 
+    private shootSound: HTMLAudioElement;
+    private punchSound: HTMLAudioElement;
+
     private healthBar: HTMLImageElement; // Health Bar UI
 
     private input: InputHandler;
@@ -65,6 +68,10 @@ export class Game {
         // Load Dialogue Character
         this.dialogueImage = new Image();
         this.dialogueImage.src = 'assets/player/222.png';
+
+        // Load SFX
+        this.shootSound = new Audio('assets/sounds/shoot.mp3');
+        this.punchSound = new Audio('assets/sounds/punch.mp3');
 
 
         // Spawn some enemies
@@ -402,6 +409,8 @@ export class Game {
             const bulletData = this.player.shoot(now);
             if (bulletData) {
                 this.bullets.push(new Bullet(bulletData.x, bulletData.y, bulletData.dir));
+                this.shootSound.currentTime = 0;
+                this.shootSound.play().catch(() => { });
             }
         }
 
@@ -514,6 +523,9 @@ export class Game {
     private handlePunchDamage() {
         const now = Date.now();
         if (now - this.lastPunchTime < this.punchCooldown) return;
+
+        this.punchSound.currentTime = 0;
+        this.punchSound.play().catch(() => { });
 
         // Define Punch Hitbox (In front of player)
         const range = 60;
