@@ -409,8 +409,8 @@ export class Game {
             const bulletData = this.player.shoot(now);
             if (bulletData) {
                 this.bullets.push(new Bullet(bulletData.x, bulletData.y, bulletData.dir));
-                this.shootSound.currentTime = 0;
-                this.shootSound.play().catch(() => { });
+                // Overlapping sound logic
+                (this.shootSound.cloneNode() as HTMLAudioElement).play().catch(() => { });
             }
         }
 
