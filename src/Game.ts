@@ -447,8 +447,8 @@ export class Game {
 
         // Random Spawn (Example: 1% chance per frame)
         if (this.healthPickups.length < 3 && Math.random() < 0.01) {
-            const x = 50 + Math.random() * (this.canvas.width - 100); 
-             this.healthPickups.push(new HealthPickup(x, 350));
+            const x = 50 + Math.random() * (this.canvas.width - 100);
+            this.healthPickups.push(new HealthPickup(x, 350));
         }
 
         // Floating Texts Update
@@ -561,7 +561,7 @@ export class Game {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw Background
-        if (this.bgImage.complete) {
+        if (this.bgImage.complete && this.bgImage.naturalWidth > 0) {
             this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
         }
 
@@ -615,7 +615,7 @@ export class Game {
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
             // Draw Character (Left side, large)
-            if (this.dialogueImage.complete) {
+            if (this.dialogueImage.complete && this.dialogueImage.naturalWidth > 0) {
                 // Calculate scale to fit canvas height (e.g. 80%)
                 const naturalW = this.dialogueImage.naturalWidth || 69;
                 const naturalH = this.dialogueImage.naturalHeight || 116;
@@ -740,7 +740,7 @@ export class Game {
         }
 
         // Draw Health Bar Frame
-        if (this.healthBar.complete) {
+        if (this.healthBar.complete && this.healthBar.naturalWidth > 0) {
             const barX = 20;
             const barY = 20;
             const barScale = 0.15; // Even smaller size
