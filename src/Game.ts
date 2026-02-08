@@ -344,8 +344,14 @@ export class Game {
                 uiLayer.style.display = 'none';
             } else if (this.gameState === GameState.START_SCREEN) {
                 // Return to auth? Or just close leaderboard logic
-                const authContainer = document.getElementById('auth-container');
-                if (authContainer) authContainer.style.display = 'flex';
+                // Only show auth container if NOT logged in (checked via logout button visibility)
+                const btnLogout = document.getElementById('btn-logout');
+                const isLoggedIn = btnLogout && btnLogout.style.display !== 'none';
+
+                if (!isLoggedIn) {
+                    const authContainer = document.getElementById('auth-container');
+                    if (authContainer) authContainer.style.display = 'flex';
+                }
             }
         }
     }
@@ -736,7 +742,12 @@ export class Game {
                         this.addFloatingText(enemy.x, enemy.y, "+50", '#ef4444');
 
                         this.killCount++;
-                        if (this.killCount % 2 === 0) {
+                        // Spawn Health Pickup (Every 2 kills, but NOT from Boss)
+                        // Boss is identifiable by type or class check. 
+                        // Since Boss extends Enemy, we can check instanceof or just ensuring it's not the boss obj.
+                        const isBoss = (enemy as any) === this.boss;
+
+                        if (!isBoss && this.killCount % 2 === 0) {
                             this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
                         }
                     }
