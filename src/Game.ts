@@ -1141,6 +1141,42 @@ export class Game {
         }
     }
 
+    private resetToTitlePage() {
+        this.gameState = GameState.START_SCREEN;
+        this.enemies = [];
+        this.bullets = [];
+        this.floatingTexts = [];
+        this.healthPickups = [];
+        this.boss = null;
+
+        // Reset Music
+        if (this.gameplayMusic) {
+            this.gameplayMusic.pause();
+            this.gameplayMusic.currentTime = 0;
+        }
+
+        // Play Title Music
+        this.tryPlayBgMusic();
+
+        // UI Handling
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'none'; // Keep main UI hidden, but show specific buttons
+
+        const btnLogout = document.getElementById('btn-logout');
+        const btnTrophy = document.getElementById('btn-trophy');
+
+        if (btnLogout) btnLogout.style.display = 'block';
+        if (btnTrophy) btnTrophy.style.display = 'block';
+
+        // ensure start screen ui is visible if needed or just rely on title screen loop
+        const startScreenUI = document.getElementById('start-screen-ui');
+        if (startScreenUI) startScreenUI.style.display = 'flex';
+        // Auth container check - if previously logged in, maybe show "Welcome" or hide auth? 
+        // For simplicity, let's just make sure high-level UI is correct.
+        const authContainer = document.getElementById('auth-container');
+        if (authContainer) authContainer.style.display = 'flex'; // Restore auth container for "Sign in" or "Welcome"
+    }
+
     private async fetchLeaderboard() {
         const tbody = document.getElementById('leaderboard-body');
         if (!tbody) return;
