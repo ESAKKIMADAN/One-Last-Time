@@ -7,6 +7,8 @@ import { Boss } from './entities/Boss';
 import { FloatingText } from './entities/FloatingText';
 import { HealthPickup } from './entities/HealthPickup';
 import bgMusicUrl from './assets/bg_music.mp3';
+import shootSoundUrl from './assets/sounds/Gun.mp3';
+import punchSoundUrl from './assets/sounds/Punch.mp3';
 
 enum GameState {
     START_SCREEN,
@@ -87,8 +89,8 @@ export class Game {
         this.dialogueImage.src = 'assets/player/222.png';
 
         // Load SFX
-        this.shootSound = new Audio('assets/sounds/Gun.mp3');
-        this.punchSound = new Audio('assets/sounds/Punch.mp3');
+        this.shootSound = new Audio(shootSoundUrl);
+        this.punchSound = new Audio(punchSoundUrl);
 
 
         // Spawn some enemies
