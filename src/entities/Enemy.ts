@@ -2,7 +2,7 @@ import { Entity } from './Entity';
 import { AnimationState } from '../enums/AnimationState';
 
 export class Enemy extends Entity {
-    protected speed: number = 0.5;
+    protected speed: number = 4;
     protected direction: number = 1;
     public maxHealth: number = 5;
     public health: number = 5;

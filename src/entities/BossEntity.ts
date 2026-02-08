@@ -23,7 +23,7 @@ export class Boss extends Enemy {
         this.height = 173; // Match Player Height
         this.maxHealth = 50; // 10x normal health
         this.health = this.maxHealth;
-        this.speed = 0.3; // Slower
+        this.speed = 4; // Same as player
 
         // Load Images
         this.idleImage = new Image();
