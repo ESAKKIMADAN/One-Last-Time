@@ -68,7 +68,7 @@ export class Game {
     private boss: Boss | null = null;
     private powerUnlocked: boolean = false;
     private killCount: number = 0;
-    private storyTimer: number = 0; // Timer for story transition
+
 
 
 
@@ -425,6 +425,7 @@ export class Game {
 
         if (level === 1) enemyCount = 2;
         else if (level === 2) enemyCount = 5;
+        else if (level > 5) enemyCount = level * 2; // Infinite Mode Scaling (Harder)
         else enemyCount = level + 3; // Scaling
 
         console.log(`Starting Level ${level} with ${enemyCount} enemies`);
@@ -577,13 +578,6 @@ export class Game {
         }
 
         if (this.gameState === GameState.GAME_OVER) {
-            // If it's the end of the story, wait and return to title
-            if (this.currentLevel >= 5) {
-                this.storyTimer += deltaTime;
-                if (this.storyTimer >= 5000) { // 5 seconds of "Story Continued"
-                    this.resetToTitlePage();
-                }
-            }
             return; // Stop updating game logic
         }
 
@@ -617,16 +611,12 @@ export class Game {
         if (this.enemies.length === 0) {
             this.currentLevel++;
 
-            if (this.currentLevel > 5) {
-                this.gameState = GameState.GAME_OVER;
-                this.storyTimer = 0;
-                // Stop music
-                if (this.gameplayMusic) {
-                    this.gameplayMusic.pause();
-                    this.gameplayMusic.currentTime = 0;
-                }
-                this.saveScore();
-                return;
+            if (this.currentLevel === 6) {
+                // Just defeated the boss
+                this.addFloatingText(this.player.x, this.player.y - 150, "BOSS DEFEATED!", '#3b82f6');
+                setTimeout(() => {
+                    this.addFloatingText(this.player.x, this.player.y - 120, "INFINITE MODE START", '#ef4444');
+                }, 1500);
             }
 
             // Trigger Dialogue before Level 4
@@ -1030,44 +1020,33 @@ export class Game {
 
         // Game Over Screen Overlay
         if (this.gameState === GameState.GAME_OVER) {
-            if (this.currentLevel > 5) {
-                // Victory Screen
-                this.ctx.fillStyle = '#000000'; // Full Black
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            // Death Screen
+            // Transparent Black Background
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                this.ctx.textAlign = 'center';
-                this.ctx.fillStyle = '#FFFFFF'; // White Text
-                this.ctx.font = '30px "Press Start 2P"';
-                this.ctx.fillText("STORY TO BE CONTINUED", this.canvas.width / 2, this.canvas.height / 2);
-            } else {
-                // Death Screen
-                // Transparent Black Background
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.textAlign = 'center';
 
-                this.ctx.textAlign = 'center';
+            // "DEAD" Text - Red Pixel
+            this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
+            this.ctx.font = '60px "Press Start 2P"';
 
-                // "DEAD" Text - Red Pixel
-                this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
-                this.ctx.font = '60px "Press Start 2P"';
+            this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
 
-                this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
+            // "RETRY" Button
+            const btnW = 200;
+            const btnH = 50;
+            const btnX = this.canvas.width / 2 - btnW / 2;
+            const btnY = this.canvas.height / 2 + 50;
 
-                // "RETRY" Button
-                const btnW = 200;
-                const btnH = 50;
-                const btnX = this.canvas.width / 2 - btnW / 2;
-                const btnY = this.canvas.height / 2 + 50;
+            // Button Rect
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.fillRect(btnX, btnY, btnW, btnH);
 
-                // Button Rect
-                this.ctx.fillStyle = '#ffffff';
-                this.ctx.fillRect(btnX, btnY, btnW, btnH);
-
-                // Button Text
-                this.ctx.fillStyle = '#000000';
-                this.ctx.font = '24px "Press Start 2P"';
-                this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
-            }
+            // Button Text
+            this.ctx.fillStyle = '#000000';
+            this.ctx.font = '24px "Press Start 2P"';
+            this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
 
 
             // Don't draw health bar if dead
@@ -1114,7 +1093,7 @@ export class Game {
 
 
     private toggleCooldown: number = 0;
-    private spawnTimer: number = 0;
+
     private handleToggleInput() {
         if (this.toggleCooldown > 0) return;
         if (!this.powerUnlocked) {
@@ -1154,41 +1133,7 @@ export class Game {
         }
     }
 
-    private resetToTitlePage() {
-        this.gameState = GameState.START_SCREEN;
-        this.enemies = [];
-        this.bullets = [];
-        this.floatingTexts = [];
-        this.healthPickups = [];
-        this.boss = null;
 
-        // Reset Music
-        if (this.gameplayMusic) {
-            this.gameplayMusic.pause();
-            this.gameplayMusic.currentTime = 0;
-        }
-
-        // Play Title Music
-        this.tryPlayBgMusic();
-
-        // UI Handling
-        const uiLayer = document.getElementById('ui-layer');
-        if (uiLayer) uiLayer.style.display = 'none'; // Keep main UI hidden, but show specific buttons
-
-        const btnLogout = document.getElementById('btn-logout');
-        const btnTrophy = document.getElementById('btn-trophy');
-
-        if (btnLogout) btnLogout.style.display = 'block';
-        if (btnTrophy) btnTrophy.style.display = 'block';
-
-        // ensure start screen ui is visible if needed or just rely on title screen loop
-        const startScreenUI = document.getElementById('start-screen-ui');
-        if (startScreenUI) startScreenUI.style.display = 'flex';
-        // Auth container check - if previously logged in, maybe show "Welcome" or hide auth? 
-        // For simplicity, let's just make sure high-level UI is correct.
-        const authContainer = document.getElementById('auth-container');
-        if (authContainer) authContainer.style.display = 'flex'; // Restore auth container for "Sign in" or "Welcome"
-    }
 
     private async fetchLeaderboard() {
         const tbody = document.getElementById('leaderboard-body');
