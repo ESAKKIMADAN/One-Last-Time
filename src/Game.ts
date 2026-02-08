@@ -119,6 +119,9 @@ export class Game {
 
             const btnTrophy = document.getElementById('btn-trophy');
             if (btnTrophy) btnTrophy.style.display = 'block';
+
+            const btnLogout = document.getElementById('btn-logout');
+            if (btnLogout) btnLogout.style.display = 'block';
         }
     }
 
@@ -132,6 +135,15 @@ export class Game {
         const authContainer = document.getElementById('auth-container');
         const leaderboardContainer = document.getElementById('leaderboard-container');
         const btnTrophy = document.getElementById('btn-trophy');
+        const btnLogout = document.getElementById('btn-logout');
+
+        // Logout Logic
+        if (btnLogout) {
+            btnLogout.addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.reload();
+            });
+        }
 
         // Google Login Logic
         if (btnGoogleLogin) {
@@ -227,6 +239,9 @@ export class Game {
 
         const btnTrophy = document.getElementById('btn-trophy');
         if (btnTrophy) btnTrophy.style.display = 'none';
+
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) btnLogout.style.display = 'none';
     }
 
     private startLevel(level: number) {
@@ -293,6 +308,9 @@ export class Game {
                 // Hide Trophy Button
                 const btnTrophy = document.getElementById('btn-trophy');
                 if (btnTrophy) btnTrophy.style.display = 'none';
+
+                const btnLogout = document.getElementById('btn-logout');
+                if (btnLogout) btnLogout.style.display = 'none';
             }
             return;
         }
