@@ -67,6 +67,8 @@ export class Game {
     private boss: Boss | null = null;
     private powerUnlocked: boolean = false;
     private killCount: number = 0;
+    private storyTimer: number = 0; // Timer for story transition
+
 
 
     // Fade Transition
@@ -553,8 +555,16 @@ export class Game {
         }
 
         if (this.gameState === GameState.GAME_OVER) {
+            // If it's the end of the story, wait and return to title
+            if (this.currentLevel >= 5) {
+                this.storyTimer += deltaTime;
+                if (this.storyTimer >= 5000) { // 5 seconds of "Story Continued"
+                    this.resetToTitlePage();
+                }
+            }
             return; // Stop updating game logic
         }
+
 
         // Boss Music Logic: Stop at 50% health
         if (this.boss && this.gameplayMusic && !this.gameplayMusic.paused) {
@@ -581,6 +591,17 @@ export class Game {
         if (this.enemies.length === 0) {
             this.currentLevel++;
 
+            // End of current story after Level 5
+            if (this.currentLevel > 5) {
+                this.gameState = GameState.GAME_OVER; // Use Game Over state for the "Continued" screen
+                this.storyTimer = 0;
+                if (this.gameplayMusic) {
+                    this.gameplayMusic.pause();
+                    this.gameplayMusic.currentTime = 0;
+                }
+                return;
+            }
+
             // Trigger Dialogue before Level 4
             if (this.currentLevel === 4) {
                 this.gameState = GameState.DIALOGUE;
@@ -594,6 +615,7 @@ export class Game {
 
             this.startLevel(this.currentLevel);
         }
+
 
         // Player Update
         // Player Update
@@ -968,23 +990,28 @@ export class Game {
 
             // "DEAD" Text - Red Pixel
             this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
-            this.ctx.font = '60px "Press Start 2P"';
-            this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
+            this.ctx.font = this.currentLevel >= 5 ? '30px "Press Start 2P"' : '60px "Press Start 2P"';
 
-            // "RETRY" Button
-            const btnW = 200;
-            const btnH = 50;
-            const btnX = this.canvas.width / 2 - btnW / 2;
-            const btnY = this.canvas.height / 2 + 50;
+            const mainText = this.currentLevel >= 5 ? "STORY TO BE CONTINUED" : "DEAD";
+            this.ctx.fillText(mainText, this.canvas.width / 2, this.canvas.height / 2 - 20);
 
-            // Button Rect
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillRect(btnX, btnY, btnW, btnH);
+            // "RETRY" Button - Only show if before Level 5
+            if (this.currentLevel < 5) {
+                const btnW = 200;
+                const btnH = 50;
+                const btnX = this.canvas.width / 2 - btnW / 2;
+                const btnY = this.canvas.height / 2 + 50;
 
-            // Button Text
-            this.ctx.fillStyle = '#000000';
-            this.ctx.font = '24px "Press Start 2P"';
-            this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
+                // Button Rect
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(btnX, btnY, btnW, btnH);
+
+                // Button Text
+                this.ctx.fillStyle = '#000000';
+                this.ctx.font = '24px "Press Start 2P"';
+                this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
+            }
+
 
             // Don't draw health bar if dead
             const btnTrophy = document.getElementById('btn-trophy');
@@ -1029,6 +1056,34 @@ export class Game {
     }
 
     private toggleCooldown: number = 0;
+    private resetToTitlePage() {
+        this.gameState = GameState.START_SCREEN;
+        this.currentLevel = 1;
+        this.score = 0;
+        this.enemies = [];
+        this.boss = null;
+        this.powerUnlocked = false;
+
+        // Show UI Elements
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'flex';
+
+        const btnTrophy = document.getElementById('btn-trophy');
+        if (btnTrophy) btnTrophy.style.display = 'block';
+
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) btnLogout.style.display = 'block';
+
+        // Swap Musics
+        if (this.gameplayMusic) {
+            this.gameplayMusic.pause();
+            this.gameplayMusic.currentTime = 0;
+        }
+        if (this.bgMusic) {
+            this.bgMusic.currentTime = 0;
+            this.bgMusic.play().catch(e => console.warn("BG Music failed:", e));
+        }
+    }
     private handleToggleInput() {
         if (this.toggleCooldown > 0) return;
         if (!this.powerUnlocked) {
