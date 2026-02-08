@@ -22,13 +22,19 @@ export class Enemy extends Entity {
         [AnimationState.SHOOT]: [4, 5] // Using SHOOT for punching
     };
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, public type: number = 1) {
         super(x, y, 77, 173); // Using same size as player for consistency
 
-        // Preload images 1 through 5 from Enemey1
+        // Preload images based on type
+        // Type 1: assets/Enemey1/${i}-removebg-preview (1).png
+        // Type 2: assets/Enemy2/${i}-removebg-preview (2).png
+
+        const folder = type === 1 ? 'Enemey1' : 'Enemy2';
+        const suffix = type === 1 ? '(1)' : '(2)';
+
         for (let i = 1; i <= 5; i++) {
             const img = new Image();
-            img.src = `assets/Enemey1/${i}-removebg-preview (1).png`;
+            img.src = `assets/${folder}/${i}-removebg-preview ${suffix}.png`;
             this.images[i] = img;
         }
 

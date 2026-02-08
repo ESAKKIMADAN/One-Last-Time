@@ -38,6 +38,7 @@ export class Game {
     private gameplayMusic: HTMLAudioElement; // Gameplay Music
 
     private bgImage: HTMLImageElement; // Background
+    private titleBgImage: HTMLImageElement; // Title Screen Background
     private bossBgSkyImage: HTMLImageElement; // Phase 2 Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
 
@@ -87,6 +88,9 @@ export class Game {
         // Load Background
         this.bgImage = new Image();
         this.bgImage.src = 'assets/warehouse_bg.png';
+
+        this.titleBgImage = new Image();
+        this.titleBgImage.src = 'assets/title_bg.png';
 
         this.bossBgSkyImage = new Image();
         this.bossBgSkyImage.src = bossBgSkyUrl;
@@ -145,8 +149,8 @@ export class Game {
 
 
         // Spawn some enemies
-        this.spawnEnemy(500, 222); // 350 (ground) - 128 (height)
-        this.spawnEnemy(700, 222);
+        this.spawnEnemy(500, 222, 1); // 350 (ground) - 128 (height)
+        this.spawnEnemy(700, 222, 2);
 
         // Mouse Listener for UI Interactions (Retry Button)
         this.canvas.addEventListener('click', (e) => {
@@ -350,8 +354,8 @@ export class Game {
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
-    private spawnEnemy(x: number, y: number) {
-        this.enemies.push(new Enemy(x, y));
+    private spawnEnemy(x: number, y: number, type: number = 1) {
+        this.enemies.push(new Enemy(x, y, type));
     }
 
     public resetGame() {
@@ -423,7 +427,8 @@ export class Game {
         for (let i = 0; i < enemyCount; i++) {
             const x = 500 + Math.random() * 800;
             const y = 350; // Simplify Y for now or randomize if needed
-            this.spawnEnemy(x, y);
+            const type = (i % 2) + 1; // Alternate 1, 2, 1, 2...
+            this.spawnEnemy(x, y, type);
         }
     }
 
@@ -441,6 +446,12 @@ export class Game {
         // Handle Fade Transition
         if (this.fadeState === 'FADE_OUT') {
             this.fadeOpacity += deltaTime / 1000; // 1 second fade
+
+            // Sync video opacity if in VIDEO_INTRO
+            if (this.gameState === GameState.VIDEO_INTRO && this.videoElement) {
+                this.videoElement.style.opacity = (1 - this.fadeOpacity).toString();
+            }
+
             if (this.fadeOpacity >= 1) {
                 this.fadeOpacity = 1;
                 this.fadeState = 'FADE_IN';
@@ -449,7 +460,8 @@ export class Game {
                     this.onFadeOutComplete = null;
                 }
             }
-        } else if (this.fadeState === 'FADE_IN') {
+        }
+        else if (this.fadeState === 'FADE_IN') {
             this.fadeOpacity -= deltaTime / 1000;
             if (this.fadeOpacity <= 0) {
                 this.fadeOpacity = 0;
@@ -501,13 +513,15 @@ export class Game {
 
                 if (this.videoElement) {
                     this.videoElement.style.display = 'block';
+                    this.videoElement.style.opacity = '1';
                     this.videoElement.play().catch(e => {
                         console.error("Video play failed:", e);
                         // Fallback to dialogue if video fails
                         this.videoElement.style.display = 'none';
                         this.startDialogue();
                     });
-                } else {
+                }
+                else {
                     this.startDialogue();
                 }
             }
@@ -518,13 +532,15 @@ export class Game {
             // Wait for video to end (handled by onended)
             // Optional: Skip with Escape?
             if (this.input.isDown('Escape')) {
-                if (this.videoElement) {
+                if (this.videoElement && this.fadeState === 'NONE') {
                     this.videoElement.pause();
-                    this.videoElement.currentTime = 0;
-                    this.videoElement.style.display = 'none';
-                    this.startDialogue();
+                    this.triggerTransition(() => {
+                        this.videoElement.style.display = 'none';
+                        this.startDialogue();
+                    });
                 }
             }
+
             return;
         }
 
@@ -804,31 +820,39 @@ export class Game {
         }
 
         if (this.gameState === GameState.START_SCREEN) {
-            // Match "outside" background color
-            this.ctx.fillStyle = '#242424';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            // Draw Title Background
+            if (this.titleBgImage.complete && this.titleBgImage.naturalWidth > 0) {
+                this.ctx.drawImage(this.titleBgImage, 0, 0, this.canvas.width, this.canvas.height);
+            } else {
+                this.ctx.fillStyle = '#242424';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
 
-            this.ctx.textAlign = 'center';
-            this.ctx.fillStyle = '#FFFFFF'; // White Text
+            this.ctx.textAlign = 'left';
+            this.ctx.fillStyle = '#000000'; // Black Text
 
             // Title
             this.ctx.font = '40px "Press Start 2P"';
-            this.ctx.fillText("ONE LAST TIME", this.canvas.width / 2, this.canvas.height / 2 - 20);
+            this.ctx.fillText("ONE LAST TIME", 50, this.canvas.height / 2 - 20);
 
             // Blinking Start Text
             const now = Date.now();
             if (Math.floor(now / 500) % 2 === 0) {
                 this.ctx.font = '20px "Press Start 2P"';
-                this.ctx.fillText("PRESS ENTER TO START", this.canvas.width / 2, this.canvas.height / 2 + 40);
+                this.ctx.fillText("PRESS ENTER TO START", 50, this.canvas.height / 2 + 40);
             }
 
             return;
         }
 
+        if (this.gameState === GameState.VIDEO_INTRO) {
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            return;
+        }
+
         // Common Background Drawing for Dialogue and Playing
-        // Draw Background
-        // Common Background Drawing for Dialogue and Playing
-        // Draw Background
+
         if (this.bgImage.complete && this.bgImage.naturalHeight > 0) {
             // Calculate scale to fit canvas height while maintaining aspect ratio
             const scale = this.canvas.height / this.bgImage.naturalHeight;
