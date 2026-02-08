@@ -22,6 +22,7 @@ export class Game {
     private cameraX: number = 0; // Camera position
 
     private dialogueMusic: HTMLAudioElement; // Dialogue Music
+    private bgMusic: HTMLAudioElement; // Title Screen Music
 
     private bgImage: HTMLImageElement; // Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
@@ -66,6 +67,11 @@ export class Game {
         this.dialogueMusic = new Audio('assets/vijay-thalapathy-vs-vijay-sethupati-master-prime-video-1_R7h0FHiU.mp3');
         this.dialogueMusic.loop = false;
 
+        // Load Title Screen Music
+        this.bgMusic = new Audio('assets/bg_music.mp3');
+        this.bgMusic.loop = true;
+        this.bgMusic.volume = 0.5;
+
 
         // Load Dialogue Character
         this.dialogueImage = new Image();
@@ -103,6 +109,20 @@ export class Game {
         // UI Logic (Login/Register)
         this.setupUI();
         this.checkSession();
+        this.tryPlayBgMusic();
+    }
+
+    private tryPlayBgMusic() {
+        this.bgMusic.play().catch(() => {
+            // If autoplay blocked, wait for interaction
+            const playOnInteraction = () => {
+                this.bgMusic.play().catch(e => console.error("Audio play failed:", e));
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('keydown', playOnInteraction);
+            };
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('keydown', playOnInteraction);
+        });
     }
 
     private async checkSession() {
@@ -122,6 +142,8 @@ export class Game {
 
             const btnLogout = document.getElementById('btn-logout');
             if (btnLogout) btnLogout.style.display = 'block';
+
+            // Music already handled by tryPlayBgMusic or continues playing
         }
     }
 
@@ -300,6 +322,10 @@ export class Game {
             // Wait for UI Interaction (Login) is done.
             // Converting to Title Screen Logic: Wait for any key to start Dialogue
             if (this.input.isDown('Enter') || this.input.isDown('Space')) {
+                // Stop Title Music
+                this.bgMusic.pause();
+                this.bgMusic.currentTime = 0;
+
                 if (this.toggleCooldown > 0) return;
                 this.gameState = GameState.DIALOGUE;
                 this.toggleCooldown = 500;
