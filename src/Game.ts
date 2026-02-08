@@ -735,8 +735,27 @@ export class Game {
             this.ctx.textAlign = 'left';
 
             if (this.currentLevel === 4) {
-                this.ctx.fillText("...", bubbleX + 30, bubbleY + 60);
-                this.ctx.fillText("(Text coming later)", bubbleX + 30, bubbleY + 90);
+                const currentTime = this.level4DialogueMusic.currentTime;
+
+                // Text 1: 0s - 7s
+                if (currentTime < 7) {
+                    this.ctx.fillText("yennaiku Observation Home-la", bubbleX + 30, bubbleY + 40);
+                    this.ctx.fillText("andha rendu pasangala konnu", bubbleX + 30, bubbleY + 70);
+                    this.ctx.fillText("thonga vutingalo,", bubbleX + 30, bubbleY + 100);
+                    this.ctx.fillText("annike naan sethuten.", bubbleX + 30, bubbleY + 130);
+                }
+                // Text 2: 7s - 11s
+                else if (currentTime < 11) {
+                    this.ctx.fillText("Inime enna pathi", bubbleX + 30, bubbleY + 60);
+                    this.ctx.fillText("enakku kavalaye illa.", bubbleX + 30, bubbleY + 90);
+                }
+                // Text 3: 11s+
+                else {
+                    this.ctx.fillText("Indha chinna pasanga kaila", bubbleX + 30, bubbleY + 40);
+                    this.ctx.fillText("pachai kuthi vittu,", bubbleX + 30, bubbleY + 70);
+                    this.ctx.fillText("echai velaiki use panradhellam", bubbleX + 30, bubbleY + 100);
+                    this.ctx.fillText("inime nadakkadhu.", bubbleX + 30, bubbleY + 130);
+                }
             } else {
                 this.ctx.fillText("Enga yarda Bhavani", bubbleX + 30, bubbleY + 60);
                 this.ctx.fillText("haaa..!", bubbleX + 30, bubbleY + 90);
