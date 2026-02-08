@@ -59,6 +59,11 @@ export class Game {
     private powerUnlocked: boolean = false;
     private killCount: number = 0;
 
+    // Fade Transition
+    private fadeOpacity: number = 0;
+    private fadeState: 'NONE' | 'FADE_OUT' | 'FADE_IN' = 'NONE';
+    private onFadeOutComplete: (() => void) | null = null;
+
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
         this.ctx = ctx;
@@ -147,10 +152,19 @@ export class Game {
         this.videoElement = document.getElementById('intro-video') as HTMLVideoElement;
         if (this.videoElement) {
             this.videoElement.onended = () => {
-                this.videoElement.style.display = 'none';
-                this.startDialogue();
+                // Video ended -> Fade out -> Start Dialogue
+                this.triggerTransition(() => {
+                    this.videoElement.style.display = 'none';
+                    this.startDialogue();
+                });
             };
         }
+    }
+
+    private triggerTransition(callback: () => void) {
+        this.fadeState = 'FADE_OUT';
+        this.fadeOpacity = 0;
+        this.onFadeOutComplete = callback;
     }
 
     private startDialogue() {
@@ -394,6 +408,25 @@ export class Game {
     }
 
     private update(deltaTime: number, now: number) {
+        // Handle Fade Transition
+        if (this.fadeState === 'FADE_OUT') {
+            this.fadeOpacity += deltaTime / 1000; // 1 second fade
+            if (this.fadeOpacity >= 1) {
+                this.fadeOpacity = 1;
+                this.fadeState = 'FADE_IN';
+                if (this.onFadeOutComplete) {
+                    this.onFadeOutComplete();
+                    this.onFadeOutComplete = null;
+                }
+            }
+        } else if (this.fadeState === 'FADE_IN') {
+            this.fadeOpacity -= deltaTime / 1000;
+            if (this.fadeOpacity <= 0) {
+                this.fadeOpacity = 0;
+                this.fadeState = 'NONE';
+            }
+        }
+
         // Check for Boss Phase 2 Interaction
         if (this.boss && this.boss.active && this.boss.health <= this.boss.maxHealth / 2) {
             if (this.input.isDown('KeyX')) {
@@ -953,6 +986,14 @@ export class Game {
 
             // Draw Frame on Top
             this.ctx.drawImage(this.healthBar, barX, barY, w, h);
+        }
+
+        // Draw Fade Overlay
+        if (this.fadeOpacity > 0) {
+            this.ctx.globalAlpha = this.fadeOpacity;
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.globalAlpha = 1.0; // Reset alpha
         }
     }
 
