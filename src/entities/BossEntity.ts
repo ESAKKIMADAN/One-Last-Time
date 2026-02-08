@@ -16,6 +16,7 @@ export class Boss extends Enemy {
 
     constructor(x: number, y: number) {
         super(x, y);
+        console.log("BOSS CREATED - NEW VERSION");
         this.width = 128; // Double width
         this.height = 256; // Double height
         this.maxHealth = 50; // 10x normal health

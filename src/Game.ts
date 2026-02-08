@@ -3,7 +3,7 @@ import { InputHandler } from './InputHandler';
 import { Player } from './entities/Player';
 import { Bullet } from './entities/Bullet';
 import { Enemy } from './entities/Enemy';
-import { Boss } from './entities/Boss';
+import { Boss } from './entities/BossEntity';
 import { FloatingText } from './entities/FloatingText';
 import { HealthPickup } from './entities/HealthPickup';
 import bgMusicUrl from './assets/bg_music.mp3';
