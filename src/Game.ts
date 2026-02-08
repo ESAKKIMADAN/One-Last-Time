@@ -14,6 +14,7 @@ import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 
 enum GameState {
     START_SCREEN,
+    VIDEO_INTRO,
     DIALOGUE,
     PLAYING,
     GAME_OVER
@@ -36,6 +37,8 @@ export class Game {
 
     private shootSound: HTMLAudioElement;
     private punchSound: HTMLAudioElement;
+
+    private videoElement: HTMLVideoElement; // Intro Video
 
     private healthBar: HTMLImageElement; // Health Bar UI
 
@@ -134,6 +137,28 @@ export class Game {
         this.setupUI();
         this.checkSession();
         // this.tryPlayBgMusic(); // Removed here, called in checkSession or constructor if needed
+
+        // Get Video Element
+        this.videoElement = document.getElementById('intro-video') as HTMLVideoElement;
+        if (this.videoElement) {
+            this.videoElement.onended = () => {
+                this.videoElement.style.display = 'none';
+                this.startDialogue();
+            };
+        }
+    }
+
+    private startDialogue() {
+        this.gameState = GameState.DIALOGUE;
+        this.toggleCooldown = 500;
+        this.dialogueMusic.play().catch(e => console.error("Audio playback failed:", e));
+
+        // Hide Trophy Button / Logout (Already hidden in start screen logic but good to ensure)
+        const btnTrophy = document.getElementById('btn-trophy');
+        if (btnTrophy) btnTrophy.style.display = 'none';
+
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) btnLogout.style.display = 'none';
     }
 
     private tryPlayBgMusic() {
@@ -370,23 +395,41 @@ export class Game {
 
         if (this.gameState === GameState.START_SCREEN) {
             // Wait for UI Interaction (Login) is done.
-            // Converting to Title Screen Logic: Wait for any key to start Dialogue
+            // Converting to Title Screen Logic: Wait for any key to start Intro Video
             if (this.input.isDown('Enter') || this.input.isDown('Space')) {
                 // Stop Title Music
                 this.bgMusic.pause();
                 this.bgMusic.currentTime = 0;
 
                 if (this.toggleCooldown > 0) return;
-                this.gameState = GameState.DIALOGUE;
-                this.toggleCooldown = 500;
-                this.dialogueMusic.play().catch(e => console.error("Audio playback failed:", e));
 
-                // Hide Trophy Button
-                const btnTrophy = document.getElementById('btn-trophy');
-                if (btnTrophy) btnTrophy.style.display = 'none';
+                // switch to VIDEO_INTRO
+                this.gameState = GameState.VIDEO_INTRO;
+                if (this.videoElement) {
+                    this.videoElement.style.display = 'block';
+                    this.videoElement.play().catch(e => {
+                        console.error("Video play failed:", e);
+                        // Fallback to dialogue if video fails
+                        this.videoElement.style.display = 'none';
+                        this.startDialogue();
+                    });
+                } else {
+                    this.startDialogue();
+                }
+            }
+            return;
+        }
 
-                const btnLogout = document.getElementById('btn-logout');
-                if (btnLogout) btnLogout.style.display = 'none';
+        if (this.gameState === GameState.VIDEO_INTRO) {
+            // Wait for video to end (handled by onended)
+            // Optional: Skip with Escape?
+            if (this.input.isDown('Escape')) {
+                if (this.videoElement) {
+                    this.videoElement.pause();
+                    this.videoElement.currentTime = 0;
+                    this.videoElement.style.display = 'none';
+                    this.startDialogue();
+                }
             }
             return;
         }
