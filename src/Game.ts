@@ -12,8 +12,7 @@ enum GameState {
     START_SCREEN,
     DIALOGUE,
     PLAYING,
-    GAME_OVER,
-    AUTOPLAY_BLOCKED // New state to show "Click to Unmute"
+    GAME_OVER
 }
 
 export class Game {
@@ -117,36 +116,13 @@ export class Game {
     private tryPlayBgMusic() {
         this.bgMusic.play().catch(() => {
             console.log("Autoplay blocked. Waiting for interaction.");
-            // If autoplay blocked, we can either wait silently or show a prompt.
-            // Since the user is on the title screen, we should probably show a prompt if it doesn't start.
-
-            const btnMute = document.createElement('button');
-            btnMute.id = 'btn-unmute-overlay';
-            btnMute.innerText = "🔇 CLICK TO UNMUTE";
-            btnMute.style.position = 'absolute';
-            btnMute.style.bottom = '20px';
-            btnMute.style.left = '50%';
-            btnMute.style.transform = 'translateX(-50%)';
-            btnMute.style.padding = '10px 20px';
-            btnMute.style.background = 'rgba(255,0,0,0.8)';
-            btnMute.style.color = 'white';
-            btnMute.style.fontFamily = '"Press Start 2P", monospace';
-            btnMute.style.border = '2px solid white';
-            btnMute.style.zIndex = '1000';
-            btnMute.style.cursor = 'pointer';
-
-            document.body.appendChild(btnMute);
-
+            // Silent fallback: Wait for any user interaction to start music
             const playOnInteraction = () => {
-                this.bgMusic.play().then(() => {
-                    if (document.body.contains(btnMute)) document.body.removeChild(btnMute);
-                }).catch(e => console.error("Audio play failed again:", e));
-
+                this.bgMusic.play().catch(e => console.error("Audio play failed:", e));
                 document.removeEventListener('click', playOnInteraction);
                 document.removeEventListener('keydown', playOnInteraction);
             };
 
-            // Allow clicking the button OR anywhere else
             document.addEventListener('click', playOnInteraction);
             document.addEventListener('keydown', playOnInteraction);
         });
