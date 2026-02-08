@@ -69,7 +69,15 @@ export class Game {
         this.dialogueMusic.loop = false;
 
         // Load Title Screen Music
-        this.bgMusic = new Audio(bgMusicUrl);
+        // Use the existing HTML element for aggressive autoplay
+        const bgMusicEl = document.getElementById('bg-music') as HTMLAudioElement;
+        if (bgMusicEl) {
+            this.bgMusic = bgMusicEl;
+        } else {
+            // Fallback (though index.html should have it)
+            this.bgMusic = new Audio(bgMusicUrl);
+            document.body.appendChild(this.bgMusic);
+        }
         this.bgMusic.loop = true;
         this.bgMusic.volume = 0.5;
 
