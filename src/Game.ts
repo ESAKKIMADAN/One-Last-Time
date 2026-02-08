@@ -115,17 +115,34 @@ export class Game {
 
     private tryPlayBgMusic() {
         this.bgMusic.play().catch(() => {
-            console.log("Autoplay blocked. Waiting for interaction.");
-            // Silent fallback: Wait for any user interaction to start music
+            // Passive-aggressive fallback: Catch any user interaction
             const playOnInteraction = () => {
-                this.bgMusic.play().catch(e => console.error("Audio play failed:", e));
-                document.removeEventListener('click', playOnInteraction);
-                document.removeEventListener('keydown', playOnInteraction);
+                this.bgMusic.play().then(() => {
+                    // Success
+                    this.removeInteractionListeners(playOnInteraction);
+                }).catch(() => {
+                    // Still failed? Keep existing listeners.
+                });
             };
 
-            document.addEventListener('click', playOnInteraction);
-            document.addEventListener('keydown', playOnInteraction);
+            this.addInteractionListeners(playOnInteraction);
         });
+    }
+
+    private addInteractionListeners(handler: () => void) {
+        document.addEventListener('click', handler);
+        document.addEventListener('keydown', handler);
+        document.addEventListener('touchstart', handler);
+        document.addEventListener('scroll', handler);
+        document.addEventListener('mousemove', handler); // Very aggressive
+    }
+
+    private removeInteractionListeners(handler: () => void) {
+        document.removeEventListener('click', handler);
+        document.removeEventListener('keydown', handler);
+        document.removeEventListener('touchstart', handler);
+        document.removeEventListener('scroll', handler);
+        document.removeEventListener('mousemove', handler);
     }
 
     private async checkSession() {
