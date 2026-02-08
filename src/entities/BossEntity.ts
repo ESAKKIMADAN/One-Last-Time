@@ -5,6 +5,8 @@ import bossWalk2Url from '../assets/boss/3-removebg-preview.png';
 import bossAttack1Url from '../assets/boss/4-removebg-preview.png';
 import bossAttack2Url from '../assets/boss/5-removebg-preview.png';
 
+import { AnimationState } from '../enums/AnimationState';
+
 export class Boss extends Enemy {
     private idleImage: HTMLImageElement;
     private walkImages: HTMLImageElement[] = [];
@@ -12,7 +14,7 @@ export class Boss extends Enemy {
 
     private animationTimer: number = 0;
     private animationFrame: number = 0;
-    private state: 'IDLE' | 'WALK' | 'ATTACK' = 'IDLE';
+    // Uses inherited 'protected state' from Enemy
 
     constructor(x: number, y: number) {
         super(x, y);
@@ -43,11 +45,11 @@ export class Boss extends Enemy {
         const dist = Math.abs(playerX - this.x);
 
         if (dist < 100) {
-            this.state = 'ATTACK';
+            this.state = AnimationState.SHOOT; // ATTACK
         } else if (dist < 600) {
-            this.state = 'WALK';
+            this.state = AnimationState.RUN; // WALK
         } else {
-            this.state = 'IDLE';
+            this.state = AnimationState.IDLE;
         }
 
         // Animation Timer
@@ -63,15 +65,16 @@ export class Boss extends Enemy {
 
         let currentImage = this.idleImage;
 
-        if (this.state === 'IDLE') {
+        if (this.state === AnimationState.IDLE) {
             currentImage = this.idleImage;
-        } else if (this.state === 'WALK') {
+        } else if (this.state === AnimationState.RUN) {
             const frameIndex = this.animationFrame % this.walkImages.length;
             currentImage = this.walkImages[frameIndex];
-        } else if (this.state === 'ATTACK') {
+        } else if (this.state === AnimationState.SHOOT) {
             const frameIndex = this.animationFrame % this.attackImages.length;
             currentImage = this.attackImages[frameIndex];
         }
+
 
         // Calculate rendered dimensions preserving aspect ratio
         let renderW = this.width;

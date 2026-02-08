@@ -13,7 +13,8 @@ export class Enemy extends Entity {
     private gameFrame: number = 0;
     private staggerFrames: number = 10;
     private currentFrameIndex: number = 1;
-    private state: AnimationState = AnimationState.IDLE;
+    protected state: AnimationState = AnimationState.IDLE;
+
 
     private animationMap: any = {
         [AnimationState.IDLE]: [1],

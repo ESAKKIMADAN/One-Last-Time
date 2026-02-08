@@ -44,6 +44,8 @@ export class Game {
     private punchSound: HTMLAudioElement;
     private leoDialogueSound: HTMLAudioElement;
     private bossAppearanceSound: HTMLAudioElement;
+    private shootSound: HTMLAudioElement;
+
 
 
 
@@ -65,6 +67,7 @@ export class Game {
     private boss: Boss | null = null;
     private powerUnlocked: boolean = false;
     private killCount: number = 0;
+
 
     // Fade Transition
     private fadeOpacity: number = 0;
