@@ -829,17 +829,24 @@ export class Game {
             }
 
             this.ctx.textAlign = 'left';
-            this.ctx.fillStyle = '#000000'; // Black Text
 
             // Title
             this.ctx.font = '40px "Press Start 2P"';
-            this.ctx.fillText("ONE LAST TIME", 50, this.canvas.height / 2 - 20);
+            this.ctx.fillStyle = '#FFFFFF'; // White Text
+            this.ctx.strokeStyle = '#000000'; // Black Outline
+            this.ctx.lineWidth = 4;
+
+            // Stroke then Fill for Title
+            this.ctx.strokeText("ONE LAST TIME", 40, this.canvas.height / 2 - 20);
+            this.ctx.fillText("ONE LAST TIME", 40, this.canvas.height / 2 - 20);
 
             // Blinking Start Text
             const now = Date.now();
             if (Math.floor(now / 500) % 2 === 0) {
                 this.ctx.font = '20px "Press Start 2P"';
-                this.ctx.fillText("PRESS ENTER TO START", 50, this.canvas.height / 2 + 40);
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeText("PRESS ENTER TO START", 40, this.canvas.height / 2 + 40);
+                this.ctx.fillText("PRESS ENTER TO START", 40, this.canvas.height / 2 + 40);
             }
 
             return;
