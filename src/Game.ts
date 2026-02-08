@@ -9,6 +9,7 @@ import { HealthPickup } from './entities/HealthPickup';
 import bgMusicUrl from './assets/bg_music.mp3';
 import shootSoundUrl from './assets/sounds/Gun.mp3';
 import punchSoundUrl from './assets/sounds/Punch.mp3';
+import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
 
 enum GameState {
     START_SCREEN,
@@ -26,6 +27,7 @@ export class Game {
 
     private dialogueMusic: HTMLAudioElement; // Dialogue Music
     private bgMusic: HTMLAudioElement; // Title Screen Music
+    private gameplayMusic: HTMLAudioElement; // Gameplay Music
 
     private bgImage: HTMLImageElement; // Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
@@ -91,6 +93,11 @@ export class Game {
         // Load SFX
         this.shootSound = new Audio(shootSoundUrl);
         this.punchSound = new Audio(punchSoundUrl);
+
+        // Load Gameplay Music
+        this.gameplayMusic = new Audio(gameplayMusicUrl);
+        this.gameplayMusic.loop = true;
+        this.gameplayMusic.volume = 0.25;
 
 
         // Spawn some enemies
@@ -285,6 +292,11 @@ export class Game {
         this.killCount = 0;
         this.startLevel(this.currentLevel);
         this.gameState = GameState.PLAYING;
+
+        // Start Gameplay Music
+        this.gameplayMusic.currentTime = 0;
+        this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+
         this.cameraX = 0;
 
         // Ensure UI is hidden
@@ -378,6 +390,11 @@ export class Game {
                 this.gameState = GameState.PLAYING;
                 this.dialogueMusic.pause();
                 this.dialogueMusic.currentTime = 0;
+
+                // Start Gameplay Music
+                this.gameplayMusic.currentTime = 0;
+                this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+
                 // Start Level 1 if needed
                 if (this.enemies.length === 0 && this.currentLevel === 1) {
                     this.startLevel(1);
@@ -388,6 +405,13 @@ export class Game {
 
         if (this.gameState === GameState.GAME_OVER) {
             return; // Stop updating game logic
+        }
+
+        // Boss Music Logic: Stop at 50% health
+        if (this.boss && this.gameplayMusic && !this.gameplayMusic.paused) {
+            if (this.boss.health <= this.boss.maxHealth / 2) {
+                this.gameplayMusic.pause();
+            }
         }
 
         // Check for Game Over Condition
