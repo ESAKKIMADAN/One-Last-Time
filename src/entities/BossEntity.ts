@@ -16,9 +16,9 @@ export class Boss extends Enemy {
 
     constructor(x: number, y: number) {
         super(x, y);
-        console.log("BOSS CREATED - NEW VERSION");
-        this.width = 128; // Double width
-        this.height = 256; // Double height
+        console.log("BOSS CREATED - RESIZED");
+        this.width = 77; // Match Player Width
+        this.height = 173; // Match Player Height
         this.maxHealth = 50; // 10x normal health
         this.health = this.maxHealth;
         this.speed = 0.3; // Slower
@@ -73,14 +73,34 @@ export class Boss extends Enemy {
             currentImage = this.attackImages[frameIndex];
         }
 
+        // Calculate rendered dimensions preserving aspect ratio
+        let renderW = this.width;
+        let renderH = this.height;
+
+        if (currentImage.complete && currentImage.naturalHeight > 0) {
+            const ratio = currentImage.naturalWidth / currentImage.naturalHeight;
+            renderH = 173; // Match Player Height
+            renderW = renderH * ratio;
+        }
+
         ctx.save();
+
+        // Centering logic if width differs from hitbox
+        const offsetX = (this.width - renderW) / 2;
+        const offsetY = (this.height - renderH); // Bottom align
+
         if (this.direction === 1) {
             // Flip for right
-            ctx.translate(this.x + this.width, this.y);
+            // Translate to center of where we want to draw, then flip
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2); // Center of hitbox
             ctx.scale(-1, 1);
-            ctx.drawImage(currentImage, 0, 0, this.width, this.height);
+            // Draw centered
+            ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
         } else {
-            ctx.drawImage(currentImage, this.x, this.y, this.width, this.height);
+            // Draw normally
+            // Align bottom-center of hitbox? Or just simple overlay
+            // Let's align bottom to ensure feet match ground
+            ctx.drawImage(currentImage, this.x + offsetX, this.y + offsetY, renderW, renderH);
         }
         ctx.restore();
 
