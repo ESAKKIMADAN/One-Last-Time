@@ -431,6 +431,13 @@ export class Game {
         // Check for Game Over Condition
         if (this.player.health <= 0) {
             this.gameState = GameState.GAME_OVER;
+
+            // Stop Gameplay Music
+            if (this.gameplayMusic) {
+                this.gameplayMusic.pause();
+                this.gameplayMusic.currentTime = 0;
+            }
+
             this.saveScore();
             return;
         }
