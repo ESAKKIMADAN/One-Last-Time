@@ -576,6 +576,9 @@ export class Game {
         // Check for Game Over Condition
         if (this.player.health <= 0) {
             this.gameState = GameState.GAME_OVER;
+            if (this.currentLevel >= 5) {
+                this.storyTimer = 0;
+            }
 
             // Stop Gameplay Music
             if (this.gameplayMusic) {
@@ -587,22 +590,13 @@ export class Game {
             return;
         }
 
+
         // Check Level Criteria (All enemies dead)
         if (this.enemies.length === 0) {
             this.currentLevel++;
 
-            // End of current story after Level 5
-            if (this.currentLevel > 5) {
-                this.gameState = GameState.GAME_OVER; // Use Game Over state for the "Continued" screen
-                this.storyTimer = 0;
-                if (this.gameplayMusic) {
-                    this.gameplayMusic.pause();
-                    this.gameplayMusic.currentTime = 0;
-                }
-                return;
-            }
-
             // Trigger Dialogue before Level 4
+
             if (this.currentLevel === 4) {
                 this.gameState = GameState.DIALOGUE;
                 this.gameplayMusic.pause(); // Stop gameplay music
