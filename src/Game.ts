@@ -11,6 +11,7 @@ import shootSoundUrl from './assets/sounds/Gun.mp3';
 import punchSoundUrl from './assets/sounds/Punch.mp3';
 import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
 import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
+import bossBgSkyUrl from './assets/boss_bg_sky.png';
 
 enum GameState {
     START_SCREEN,
@@ -33,6 +34,7 @@ export class Game {
     private gameplayMusic: HTMLAudioElement; // Gameplay Music
 
     private bgImage: HTMLImageElement; // Background
+    private bossBgSkyImage: HTMLImageElement; // Phase 2 Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
 
     private shootSound: HTMLAudioElement;
@@ -68,6 +70,9 @@ export class Game {
         // Load Background
         this.bgImage = new Image();
         this.bgImage.src = 'assets/warehouse_bg.png';
+
+        this.bossBgSkyImage = new Image();
+        this.bossBgSkyImage.src = bossBgSkyUrl;
 
         // Load Health Bar Frame
         this.healthBar = new Image();
@@ -389,6 +394,25 @@ export class Game {
     }
 
     private update(deltaTime: number, now: number) {
+        // Check for Boss Phase 2 Interaction
+        if (this.boss && this.boss.active && this.boss.health <= this.boss.maxHealth / 2) {
+            if (this.input.isDown('KeyX')) {
+                // Change Background
+                this.bgImage = this.bossBgSkyImage;
+
+                // "Move X Y" - Resetting positions or moving to a specific spot
+                // Assuming user wants to teleport to a specific arena location or just reset camera
+                // For now, let's center the camera on the boss
+                this.player.x = 400;
+                this.player.y = 360;
+                this.boss.x = 600;
+                this.boss.y = 232;
+
+                // Optional: Visual effect or message?
+                console.log("Phase 2 Activated!");
+            }
+        }
+
         if (this.toggleCooldown > 0) {
             this.toggleCooldown -= deltaTime;
         }
