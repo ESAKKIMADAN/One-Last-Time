@@ -10,13 +10,16 @@ export class HealthPickup extends Entity {
         this.image = new Image();
         this.image.src = 'assets/pickups/health.png';
         this.image.onload = () => {
-            this.width = this.image.naturalWidth;
-            this.height = this.image.naturalHeight;
-            // Adjust y to align bottom since we might have changed height? 
-            // Or just let it be. Usually pickups are grounded. 
-            // If we spawned it at y=380 assuming 32 height, it bottom was 412.
-            // If new height is bigger, we might need to adjust y up.
-            // But for now, just setting dimensions is what was asked.
+            // Scale to match Player height (173px) as requested
+            const targetHeight = 90;
+            if (this.image.naturalHeight > 0) {
+                const ratio = this.image.naturalWidth / this.image.naturalHeight;
+                this.width = targetHeight * ratio;
+                this.height = targetHeight;
+            } else {
+                this.width = 30;
+                this.height = 40;
+            }
         };
     }
 

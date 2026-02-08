@@ -55,6 +55,10 @@ export class Player extends Entity {
     private animationMap: any = this.altAnimationMap;
     private isAltSkin: boolean = true;
 
+    public get isAltSkinActive(): boolean {
+        return this.isAltSkin;
+    }
+
     constructor(x: number, y: number) {
         super(x, y, 77, 173); // Increased size: 77x173 (1.2x of 64x144)
 
@@ -129,8 +133,8 @@ export class Player extends Entity {
 
         // Y Boundaries (Floor Depth)
         // Adjust these values to match the visual floor of the background
-        const floorTop = 300;     // Back of the room (feet pos)
-        const floorBottom = 580;  // Front of the room (feet pos)
+        const floorTop = 280;     // Back of the room (feet pos)
+        const floorBottom = 450;  // Front of the room (feet pos)
 
         // Constrain feet (y + height) to floor area
         if (this.y + this.height < floorTop) this.y = floorTop - this.height;
@@ -169,7 +173,10 @@ export class Player extends Entity {
 
         if (now - this.lastShotTime > this.fireRate) {
             this.lastShotTime = now;
-            return { x: this.x + (this.facing === 1 ? this.width : 0), y: this.y + 48, dir: this.facing };
+            // Adjusted for 1.5x scale (Visual gun is higher and wider)
+            const spawnY = this.y + 35;
+            const spawnX = this.x + (this.facing === 1 ? this.width + 20 : -20);
+            return { x: spawnX, y: spawnY, dir: this.facing };
         }
         return null;
     }
@@ -199,7 +206,7 @@ export class Player extends Entity {
         }
 
         // Apply Scaling to match new hitbox size
-        const scale = 1.2;
+        const scale = this.isAltSkin ? 1.2 : 1.5;
         w *= scale;
         h *= scale;
 

@@ -44,6 +44,7 @@ export class Game {
     private currentLevel: number = 1;
     private boss: Boss | null = null;
     private powerUnlocked: boolean = false;
+    private killCount: number = 0;
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
@@ -52,6 +53,7 @@ export class Game {
         this.input = new InputHandler();
         this.player = new Player(200, 100);
 
+        // Load Background
         // Load Background
         this.bgImage = new Image();
         this.bgImage.src = 'assets/warehouse_bg.png';
@@ -121,92 +123,8 @@ export class Game {
     }
 
     private setupUI() {
-        const uiLayer = document.getElementById('ui-layer');
-        const loginTab = document.getElementById('tab-login');
-        const registerTab = document.getElementById('tab-register');
-        const loginForm = document.getElementById('login-form') as HTMLFormElement;
-        const registerForm = document.getElementById('register-form') as HTMLFormElement;
 
-        const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
-        const loginPassInput = document.getElementById('login-password') as HTMLInputElement;
-        const regEmailInput = document.getElementById('register-email') as HTMLInputElement;
-        const regPassInput = document.getElementById('register-password') as HTMLInputElement;
-
-        if (!loginTab || !registerTab || !loginForm || !registerForm) return;
-
-        // Tab Switching
-        loginTab.addEventListener('click', () => {
-            loginTab.classList.add('active');
-            registerTab.classList.remove('active');
-            loginForm.style.display = 'flex';
-            registerForm.style.display = 'none';
-        });
-
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('active');
-            loginTab.classList.remove('active');
-            registerForm.style.display = 'flex';
-            loginForm.style.display = 'none';
-        });
-
-        const DOMAIN_SUFFIX = "@onelasttime.local";
-
-        // REGISTER LOGIC
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = regEmailInput.value;
-            const password = regPassInput.value;
-            const email = username + DOMAIN_SUFFIX;
-
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-            });
-
-            if (error) {
-                alert("Registration Failed: " + error.message);
-                console.error(error);
-            } else {
-                alert("Registration Successful! Please Login.");
-                console.log("Registered user:", data);
-                // Switch to Login Tab
-                registerTab.classList.remove('active');
-                loginTab.classList.add('active');
-                registerForm.style.display = 'none';
-                loginForm.style.display = 'flex';
-                // Pre-fill username (without domain)
-                loginEmailInput.value = username;
-            }
-        });
-
-        // LOGIN LOGIC
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = loginEmailInput.value;
-            const password = loginPassInput.value;
-            const email = username + DOMAIN_SUFFIX;
-
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-
-            if (error) {
-                alert("Login Failed: " + error.message);
-                console.error(error);
-            } else {
-                console.log("Login Successful:", data);
-                // Hide UI
-                if (uiLayer) uiLayer.style.display = 'none';
-
-                // Initial State: START_SCREEN (Title Page) - Wait for User Input
-                this.gameState = GameState.START_SCREEN;
-                this.toggleCooldown = 1500; // 1.5s delay before accepting input to start game
-
-                const btnTrophy = document.getElementById('btn-trophy');
-                if (btnTrophy) btnTrophy.style.display = 'block';
-            }
-        });
+        const btnGoogleLogin = document.getElementById('btn-google-login');
 
         // Leaderboard Navigation
         const btnShowLeaderboard = document.getElementById('btn-show-leaderboard');
@@ -214,6 +132,19 @@ export class Game {
         const authContainer = document.getElementById('auth-container');
         const leaderboardContainer = document.getElementById('leaderboard-container');
         const btnTrophy = document.getElementById('btn-trophy');
+
+        // Google Login Logic
+        if (btnGoogleLogin) {
+            btnGoogleLogin.addEventListener('click', async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin
+                    }
+                });
+                if (error) console.error('Google Auth Error:', error.message);
+            });
+        }
 
         if (btnShowLeaderboard && btnHideLeaderboard && authContainer && leaderboardContainer) {
             btnShowLeaderboard.addEventListener('click', () => {
@@ -285,6 +216,7 @@ export class Game {
         this.currentLevel = 1;
         this.boss = null;
         this.powerUnlocked = false;
+        this.killCount = 0;
         this.startLevel(this.currentLevel);
         this.gameState = GameState.PLAYING;
         this.cameraX = 0;
@@ -396,6 +328,7 @@ export class Game {
         }
 
         // Player Update
+        // Player Update
         let mapWidth = 800;
         if (this.bgImage.complete && this.bgImage.naturalHeight > 0) {
             const scale = this.canvas.height / this.bgImage.naturalHeight;
@@ -454,11 +387,7 @@ export class Game {
         this.healthPickups.forEach(hp => hp.update(deltaTime));
         this.healthPickups = this.healthPickups.filter(hp => hp.active);
 
-        // Random Spawn (Example: 1% chance per frame)
-        if (this.healthPickups.length < 3 && Math.random() < 0.01) {
-            const x = 50 + Math.random() * (this.canvas.width - 100);
-            this.healthPickups.push(new HealthPickup(x, 350));
-        }
+        // Random Spawn Logic REMOVED for deterministic "every 2 kills" logic
 
         // Floating Texts Update
         this.floatingTexts.forEach(ft => ft.update(deltaTime));
@@ -490,6 +419,11 @@ export class Game {
                         // Kill
                         this.score += 50;
                         this.addFloatingText(enemy.x, enemy.y, "+50", '#ef4444');
+
+                        this.killCount++;
+                        if (this.killCount % 2 === 0) {
+                            this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
+                        }
                     }
                 }
             }
@@ -547,6 +481,11 @@ export class Game {
                 } else {
                     this.score += 50;
                     this.addFloatingText(enemy.x, enemy.y, "+50", '#ef4444');
+
+                    this.killCount++;
+                    if (this.killCount % 2 === 0) {
+                        this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
+                    }
                 }
 
                 hit = true;
@@ -599,6 +538,8 @@ export class Game {
             return;
         }
 
+        // Common Background Drawing for Dialogue and Playing
+        // Draw Background
         // Common Background Drawing for Dialogue and Playing
         // Draw Background
         if (this.bgImage.complete && this.bgImage.naturalHeight > 0) {
