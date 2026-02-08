@@ -611,6 +611,18 @@ export class Game {
         if (this.enemies.length === 0) {
             this.currentLevel++;
 
+            if (this.currentLevel > 5) {
+                this.gameState = GameState.GAME_OVER;
+                this.storyTimer = 0;
+                // Stop music
+                if (this.gameplayMusic) {
+                    this.gameplayMusic.pause();
+                    this.gameplayMusic.currentTime = 0;
+                }
+                this.saveScore();
+                return;
+            }
+
             // Trigger Dialogue before Level 4
 
             if (this.currentLevel === 4) {
@@ -1007,21 +1019,30 @@ export class Game {
 
         // Game Over Screen Overlay
         if (this.gameState === GameState.GAME_OVER) {
-            // Transparent Black Background
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.currentLevel > 5) {
+                // Victory Screen
+                this.ctx.fillStyle = '#000000'; // Full Black
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            this.ctx.textAlign = 'center';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillStyle = '#FFFFFF'; // White Text
+                this.ctx.font = '30px "Press Start 2P"';
+                this.ctx.fillText("STORY TO BE CONTINUED", this.canvas.width / 2, this.canvas.height / 2);
+            } else {
+                // Death Screen
+                // Transparent Black Background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            // "DEAD" Text - Red Pixel
-            this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
-            this.ctx.font = this.currentLevel >= 5 ? '30px "Press Start 2P"' : '60px "Press Start 2P"';
+                this.ctx.textAlign = 'center';
 
-            const mainText = this.currentLevel >= 5 ? "STORY TO BE CONTINUED" : "DEAD";
-            this.ctx.fillText(mainText, this.canvas.width / 2, this.canvas.height / 2 - 20);
+                // "DEAD" Text - Red Pixel
+                this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
+                this.ctx.font = '60px "Press Start 2P"';
 
-            // "RETRY" Button - Only show if before Level 5
-            if (this.currentLevel < 5) {
+                this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
+
+                // "RETRY" Button
                 const btnW = 200;
                 const btnH = 50;
                 const btnX = this.canvas.width / 2 - btnW / 2;
