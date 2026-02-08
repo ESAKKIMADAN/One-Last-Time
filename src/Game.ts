@@ -10,6 +10,7 @@ import bgMusicUrl from './assets/bg_music.mp3';
 import shootSoundUrl from './assets/sounds/Gun.mp3';
 import punchSoundUrl from './assets/sounds/Punch.mp3';
 import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
+import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 
 enum GameState {
     START_SCREEN,
@@ -26,6 +27,7 @@ export class Game {
     private cameraX: number = 0; // Camera position
 
     private dialogueMusic: HTMLAudioElement; // Dialogue Music
+    private level4DialogueMusic: HTMLAudioElement; // Level 4 Dialogue Music
     private bgMusic: HTMLAudioElement; // Title Screen Music
     private gameplayMusic: HTMLAudioElement; // Gameplay Music
 
@@ -98,6 +100,10 @@ export class Game {
         this.gameplayMusic = new Audio(gameplayMusicUrl);
         this.gameplayMusic.loop = true;
         this.gameplayMusic.volume = 0.25;
+
+        // Load Level 4 Dialogue Music
+        this.level4DialogueMusic = new Audio(level4DialogueUrl);
+        this.level4DialogueMusic.loop = false;
 
 
         // Spawn some enemies
@@ -386,18 +392,26 @@ export class Game {
         }
 
         if (this.gameState === GameState.DIALOGUE) {
-            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || this.dialogueMusic.ended)) {
+            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : this.level4DialogueMusic.ended))) {
                 this.gameState = GameState.PLAYING;
+
+                // Stop Dialogue Musics
                 this.dialogueMusic.pause();
                 this.dialogueMusic.currentTime = 0;
+                this.level4DialogueMusic.pause();
+                this.level4DialogueMusic.currentTime = 0;
 
                 // Start Gameplay Music
                 this.gameplayMusic.currentTime = 0;
                 this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
 
-                // Start Level 1 if needed
-                if (this.enemies.length === 0 && this.currentLevel === 1) {
-                    this.startLevel(1);
+                // Start Level Logic
+                if (this.enemies.length === 0) {
+                    if (this.currentLevel === 1) {
+                        this.startLevel(1);
+                    } else if (this.currentLevel === 4) {
+                        this.startLevel(4);
+                    }
                 }
             }
             return;
@@ -424,6 +438,18 @@ export class Game {
         // Check Level Criteria (All enemies dead)
         if (this.enemies.length === 0) {
             this.currentLevel++;
+
+            // Trigger Dialogue before Level 4
+            if (this.currentLevel === 4) {
+                this.gameState = GameState.DIALOGUE;
+                this.gameplayMusic.pause(); // Stop gameplay music
+
+                this.level4DialogueMusic.currentTime = 0;
+                this.level4DialogueMusic.play().catch(e => console.error("L4 Dialogue failed:", e));
+                this.toggleCooldown = 500; // Debounce input
+                return;
+            }
+
             this.startLevel(this.currentLevel);
         }
 
@@ -705,10 +731,16 @@ export class Game {
 
             // Draw Text
             this.ctx.fillStyle = '#000000';
-            this.ctx.font = '20px "Press Start 2P"'; // Assuming font availability or fallback
+            this.ctx.font = '20px "Press Start 2P"';
             this.ctx.textAlign = 'left';
-            this.ctx.fillText("Enga yarda Bhavani", bubbleX + 30, bubbleY + 60);
-            this.ctx.fillText("haaa..!", bubbleX + 30, bubbleY + 90);
+
+            if (this.currentLevel === 4) {
+                this.ctx.fillText("...", bubbleX + 30, bubbleY + 60);
+                this.ctx.fillText("(Text coming later)", bubbleX + 30, bubbleY + 90);
+            } else {
+                this.ctx.fillText("Enga yarda Bhavani", bubbleX + 30, bubbleY + 60);
+                this.ctx.fillText("haaa..!", bubbleX + 30, bubbleY + 90);
+            }
 
 
             return;
