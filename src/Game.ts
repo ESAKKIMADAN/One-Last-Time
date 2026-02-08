@@ -12,6 +12,8 @@ import punchSoundUrl from './assets/sounds/Punch.mp3';
 import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
 import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 import bossBgSkyUrl from './assets/boss_bg_sky.png';
+import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
+
 
 enum GameState {
     START_SCREEN,
@@ -39,6 +41,8 @@ export class Game {
 
     private shootSound: HTMLAudioElement;
     private punchSound: HTMLAudioElement;
+    private leoDialogueSound: HTMLAudioElement;
+
 
     private videoElement: HTMLVideoElement; // Intro Video
 
@@ -117,6 +121,11 @@ export class Game {
         // Load Level 4 Dialogue Music
         this.level4DialogueMusic = new Audio(level4DialogueUrl);
         this.level4DialogueMusic.loop = false;
+
+        // Load Leo Dialogue Sound
+        this.leoDialogueSound = new Audio(leoDialogueUrl);
+        this.leoDialogueSound.loop = false;
+
 
 
         // Spawn some enemies
@@ -1005,7 +1014,10 @@ export class Game {
             return;
         }
         this.player.toggleCharacter();
+        this.leoDialogueSound.currentTime = 0;
+        this.leoDialogueSound.play().catch(e => console.warn("Leo dialogue sound failed:", e));
         this.toggleCooldown = 500; // 500ms debounce
+
     }
 
     private async saveScore() {
