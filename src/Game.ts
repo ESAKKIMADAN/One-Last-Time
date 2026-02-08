@@ -13,6 +13,8 @@ import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
 import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 import bossBgSkyUrl from './assets/boss_bg_sky.png';
 import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
+import bossAppearanceUrl from './assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3';
+
 
 
 enum GameState {
@@ -39,9 +41,10 @@ export class Game {
     private bossBgSkyImage: HTMLImageElement; // Phase 2 Background
     private dialogueImage: HTMLImageElement; // Dialogue Character
 
-    private shootSound: HTMLAudioElement;
     private punchSound: HTMLAudioElement;
     private leoDialogueSound: HTMLAudioElement;
+    private bossAppearanceSound: HTMLAudioElement;
+
 
 
     private videoElement: HTMLVideoElement; // Intro Video
@@ -111,7 +114,9 @@ export class Game {
 
         // Load SFX
         this.shootSound = new Audio(shootSoundUrl);
+        this.shootSound.volume = 0.25;
         this.punchSound = new Audio(punchSoundUrl);
+
 
         // Load Gameplay Music
         this.gameplayMusic = new Audio(gameplayMusicUrl);
@@ -125,6 +130,12 @@ export class Game {
         // Load Leo Dialogue Sound
         this.leoDialogueSound = new Audio(leoDialogueUrl);
         this.leoDialogueSound.loop = false;
+
+        // Load Boss Appearance Sound
+        this.bossAppearanceSound = new Audio(bossAppearanceUrl);
+        this.bossAppearanceSound.loop = false;
+        this.bossAppearanceSound.volume = 0.5;
+
 
 
 
@@ -376,8 +387,13 @@ export class Game {
 
         if (level === 5) {
             console.log("BOSS LEVEL!");
+            // Play Boss Appearance Sound
+            this.bossAppearanceSound.currentTime = 0;
+            this.bossAppearanceSound.play().catch(e => console.warn("Boss appearance sound failed:", e));
+
             // Spawn Boss
             this.boss = new Boss(600, 200); // 350 - 256 + ... fix Y
+
             // Boss Height is 256. Ground is roughly at Y=350 + Player Height(128) -> ~478?
             // Player Y is 360 (reset).
             // Let's use similar Y to player but adjusted for height.
@@ -592,7 +608,10 @@ export class Game {
             if (bulletData) {
                 this.bullets.push(new Bullet(bulletData.x, bulletData.y, bulletData.dir));
                 // Overlapping sound logic
-                (this.shootSound.cloneNode() as HTMLAudioElement).play().catch(() => { });
+                const s = this.shootSound.cloneNode() as HTMLAudioElement;
+                s.volume = 0.25;
+                s.play().catch(() => { });
+
             }
         }
 
