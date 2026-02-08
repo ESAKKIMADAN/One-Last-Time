@@ -405,6 +405,13 @@ export class Game {
 
                 // switch to VIDEO_INTRO
                 this.gameState = GameState.VIDEO_INTRO;
+
+                // Hide UI Elements
+                const logoutBtn = document.getElementById('btn-logout');
+                const trophyBtn = document.getElementById('btn-trophy');
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (trophyBtn) trophyBtn.style.display = 'none';
+
                 if (this.videoElement) {
                     this.videoElement.style.display = 'block';
                     this.videoElement.play().catch(e => {
