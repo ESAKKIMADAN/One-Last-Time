@@ -1073,35 +1073,7 @@ export class Game {
         }
     }
 
-    private toggleCooldown: number = 0;
-    private resetToTitlePage() {
-        this.gameState = GameState.START_SCREEN;
-        this.currentLevel = 1;
-        this.score = 0;
-        this.enemies = [];
-        this.boss = null;
-        this.powerUnlocked = false;
 
-        // Show UI Elements
-        const uiLayer = document.getElementById('ui-layer');
-        if (uiLayer) uiLayer.style.display = 'flex';
-
-        const btnTrophy = document.getElementById('btn-trophy');
-        if (btnTrophy) btnTrophy.style.display = 'block';
-
-        const btnLogout = document.getElementById('btn-logout');
-        if (btnLogout) btnLogout.style.display = 'block';
-
-        // Swap Musics
-        if (this.gameplayMusic) {
-            this.gameplayMusic.pause();
-            this.gameplayMusic.currentTime = 0;
-        }
-        if (this.bgMusic) {
-            this.bgMusic.currentTime = 0;
-            this.bgMusic.play().catch(e => console.warn("BG Music failed:", e));
-        }
-    }
     private handleToggleInput() {
         if (this.toggleCooldown > 0) return;
         if (!this.powerUnlocked) {
