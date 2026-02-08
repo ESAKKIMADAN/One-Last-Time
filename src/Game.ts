@@ -1074,6 +1074,7 @@ export class Game {
     }
 
 
+    private toggleCooldown: number = 0;
     private handleToggleInput() {
         if (this.toggleCooldown > 0) return;
         if (!this.powerUnlocked) {
