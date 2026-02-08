@@ -789,6 +789,7 @@ export class Game {
 
                 // Text 1: 0s - 7s
                 if (currentTime < 7) {
+                    this.ctx.font = '12px "Press Start 2P"'; // Smaller font for Level 4
                     this.ctx.fillText("yennaiku Observation Home-la", bubbleX + 30, bubbleY + 40);
                     this.ctx.fillText("andha rendu pasangala konnu", bubbleX + 30, bubbleY + 70);
                     this.ctx.fillText("thonga vutingalo,", bubbleX + 30, bubbleY + 100);
@@ -796,17 +797,20 @@ export class Game {
                 }
                 // Text 2: 7s - 11s
                 else if (currentTime < 11) {
+                    this.ctx.font = '12px "Press Start 2P"';
                     this.ctx.fillText("Inime enna pathi", bubbleX + 30, bubbleY + 60);
                     this.ctx.fillText("enakku kavalaye illa.", bubbleX + 30, bubbleY + 90);
                 }
                 // Text 3: 11s+
                 else {
+                    this.ctx.font = '12px "Press Start 2P"';
                     this.ctx.fillText("Indha chinna pasanga kaila", bubbleX + 30, bubbleY + 40);
                     this.ctx.fillText("pachai kuthi vittu,", bubbleX + 30, bubbleY + 70);
                     this.ctx.fillText("echai velaiki use panradhellam", bubbleX + 30, bubbleY + 100);
                     this.ctx.fillText("inime nadakkadhu.", bubbleX + 30, bubbleY + 130);
                 }
             } else {
+                this.ctx.font = '20px "Press Start 2P"'; // Normal font
                 this.ctx.fillText("Enga yarda Bhavani", bubbleX + 30, bubbleY + 60);
                 this.ctx.fillText("haaa..!", bubbleX + 30, bubbleY + 90);
             }
