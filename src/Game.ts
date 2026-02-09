@@ -14,6 +14,7 @@ import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 import bossBgSkyUrl from './assets/boss_bg_sky.png';
 import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
 import bossAppearanceUrl from './assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3';
+import level5DialogueUrl from './assets/sounds/jd-to-bhavani-intreval-talking-scene_Qz3qP6uv.mp3';
 
 
 
@@ -57,6 +58,7 @@ export class Game {
     private input: InputHandler;
     private player: Player;
     private bullets: Bullet[] = [];
+    private level5DialogueMusic: HTMLAudioElement;
     private enemies: Enemy[] = [];
     private floatingTexts: FloatingText[] = [];
     private healthPickups: HealthPickup[] = [];
@@ -138,6 +140,10 @@ export class Game {
         // Load Level 4 Dialogue Music
         this.level4DialogueMusic = new Audio(level4DialogueUrl);
         this.level4DialogueMusic.loop = false;
+
+        // Load Level 5 Dialogue Music
+        this.level5DialogueMusic = new Audio(level5DialogueUrl);
+        this.level5DialogueMusic.loop = false;
 
         // Load Leo Dialogue Sound
         this.leoDialogueSound = new Audio(leoDialogueUrl);
@@ -573,7 +579,7 @@ export class Game {
         }
 
         if (this.gameState === GameState.DIALOGUE) {
-            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : this.level4DialogueMusic.ended))) {
+            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : (this.currentLevel === 4 ? this.level4DialogueMusic.ended : this.level5DialogueMusic.ended)))) {
                 this.gameState = GameState.PLAYING;
 
                 // Stop Dialogue Musics
@@ -581,6 +587,8 @@ export class Game {
                 this.dialogueMusic.currentTime = 0;
                 this.level4DialogueMusic.pause();
                 this.level4DialogueMusic.currentTime = 0;
+                this.level5DialogueMusic.pause();
+                this.level5DialogueMusic.currentTime = 0;
 
                 // Start Gameplay Music
                 this.gameplayMusic.currentTime = 0;
@@ -592,6 +600,8 @@ export class Game {
                         this.startLevel(1);
                     } else if (this.currentLevel === 4) {
                         this.startLevel(4);
+                    } else if (this.currentLevel === 5) {
+                        this.startLevel(5);
                     }
                 }
             }
@@ -645,6 +655,17 @@ export class Game {
 
                 this.level4DialogueMusic.currentTime = 0;
                 this.level4DialogueMusic.play().catch(e => console.error("L4 Dialogue failed:", e));
+                this.toggleCooldown = 500; // Debounce input
+                return;
+            }
+
+            // Trigger Dialogue before Level 5
+            if (this.currentLevel === 5) {
+                this.gameState = GameState.DIALOGUE;
+                this.gameplayMusic.pause(); // Stop gameplay music
+
+                this.level5DialogueMusic.currentTime = 0;
+                this.level5DialogueMusic.play().catch(e => console.error("L5 Dialogue failed:", e));
                 this.toggleCooldown = 500; // Debounce input
                 return;
             }
