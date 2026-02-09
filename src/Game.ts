@@ -86,6 +86,7 @@ export class Game {
 
     // UI State
     private instructionDismissed: boolean = false;
+    private toggleCooldown: number = 0; // Cooldown for UI interactions and transitions
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
@@ -174,6 +175,22 @@ export class Game {
         this.spawnEnemy(500, 222, 1); // 350 (ground) - 128 (height)
         this.spawnEnemy(700, 222, 2);
 
+        // UI Logic (Login/Register)
+        this.setupUI();
+        this.checkSession();
+
+        // Get Video Element
+        this.videoElement = document.getElementById('intro-video') as HTMLVideoElement;
+        if (this.videoElement) {
+            this.videoElement.onended = () => {
+                // Video ended -> Fade out -> Start Dialogue
+                this.triggerTransition(() => {
+                    this.videoElement.style.display = 'none';
+                    this.startDialogue();
+                });
+            };
+        }
+
         // Mouse Listener for UI Interactions (Retry Button)
         this.canvas.addEventListener('click', (e) => {
             if (this.gameState === GameState.GAME_OVER) {
@@ -189,34 +206,75 @@ export class Game {
 
                 if (mouseX >= btnX && mouseX <= btnX + btnW &&
                     mouseY >= btnY && mouseY <= btnY + btnH) {
-                    this.resetGame();
+                    this.returnToTitle();
                 }
 
-                // If Post-Boss Death (Level > 5), allow click anywhere or specific "Main Menu" button
+                // If Post-Boss Death (Level > 5), allow click anywhere
                 if (this.currentLevel > 5) {
-                    // Just reset on any click for now as text is "Click to Main Menu"
-                    this.resetGame();
+                    this.returnToTitle();
                 }
             }
         });
+    }
 
-        // UI Logic (Login/Register)
-        this.setupUI();
-        this.checkSession();
-        // this.tryPlayBgMusic(); // Removed here, called in checkSession or constructor if needed
+    public returnToTitle() {
+        this.player = new Player(100, 360);
+        this.bullets = [];
+        this.enemies = [];
+        this.floatingTexts = [];
+        this.healthPickups = [];
+        this.score = 0;
+        this.currentLevel = 1;
+        this.boss = null;
+        this.powerUnlocked = false;
+        this.killCount = 0;
+        this.cameraX = 0;
+        this.gameState = GameState.START_SCREEN;
+        this.toggleCooldown = 1500;
 
-        // Get Video Element
-        this.videoElement = document.getElementById('intro-video') as HTMLVideoElement;
-        if (this.videoElement) {
-            this.videoElement.onended = () => {
-                // Video ended -> Fade out -> Start Dialogue
-                this.triggerTransition(() => {
-                    this.videoElement.style.display = 'none';
-                    this.startDialogue();
-                });
-            };
+        // Reset Background
+        this.bgImage = new Image();
+        this.bgImage.src = 'assets/warehouse_bg.png';
+
+        // Reset music
+        if (this.gameplayMusic) {
+            this.gameplayMusic.pause();
+            this.gameplayMusic.currentTime = 0;
+        }
+        if (this.bgMusic) {
+            this.bgMusic.currentTime = 0;
+            this.bgMusic.play().catch(() => { });
+        }
+
+        // Show UI Layer
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) {
+            uiLayer.style.display = 'flex';
+        }
+
+        // Show Start Screen UI elements
+        const startScreenUI = document.getElementById('start-screen-ui');
+        if (startScreenUI) startScreenUI.style.display = 'flex';
+
+        // Show/Hide specific buttons
+        const btnTrophy = document.getElementById('btn-trophy');
+        if (btnTrophy) btnTrophy.style.display = 'block';
+
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) btnLogout.style.display = 'block';
+
+        const authContainer = document.getElementById('auth-container');
+        if (authContainer) {
+            // Only show auth container if effectively not showing leaderboard
+            const leaderboardContainer = document.getElementById('leaderboard-container');
+            const isLeaderboardHidden = !leaderboardContainer || leaderboardContainer.style.display === 'none';
+            if (isLeaderboardHidden) {
+                authContainer.style.display = 'flex';
+            }
         }
     }
+
+
 
     private triggerTransition(callback: () => void) {
         this.fadeState = 'FADE_OUT';
@@ -551,6 +609,7 @@ export class Game {
 
                 // switch to VIDEO_INTRO
                 this.gameState = GameState.VIDEO_INTRO;
+                this.toggleCooldown = 500; // Prevent immediate skip if Enter is held
 
                 // Hide UI Elements
                 const logoutBtn = document.getElementById('btn-logout');
@@ -578,7 +637,7 @@ export class Game {
         if (this.gameState === GameState.VIDEO_INTRO) {
             // Wait for video to end (handled by onended)
             // Optional: Skip with Escape or Enter
-            if (this.input.isDown('Escape') || this.input.isDown('Enter')) {
+            if (this.toggleCooldown <= 0 && (this.input.isDown('Escape') || this.input.isDown('Enter'))) {
                 if (this.videoElement && this.fadeState === 'NONE') {
                     this.videoElement.pause();
                     this.triggerTransition(() => {
@@ -1258,7 +1317,7 @@ export class Game {
     }
 
 
-    private toggleCooldown: number = 0;
+
 
     private handleToggleInput() {
         if (this.toggleCooldown > 0) return;

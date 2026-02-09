@@ -19,6 +19,23 @@
       <video id="intro-video" src="./src/assets/videoplayback.mp4"
         style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 100;"></video>
       <canvas id="gameCanvas"></canvas>
+
+      <!-- Mobile Controls -->
+      <div id="mobile-controls">
+        <div id="d-pad">
+          <button id="btn-up" class="d-pad-btn">▲</button>
+          <div class="d-pad-middle">
+            <button id="btn-left" class="d-pad-btn">◀</button>
+            <button id="btn-right" class="d-pad-btn">▶</button>
+          </div>
+          <button id="btn-down" class="d-pad-btn">▼</button>
+        </div>
+        <div id="action-buttons">
+          <button id="btn-shoot" class="action-btn">A</button> <!-- Shoot (F) -->
+          <button id="btn-jump" class="action-btn">B</button> <!-- Jump (Space) -->
+        </div>
+      </div>
+
       <button id="btn-logout" style="display: none;">Logout</button>
       <button id="btn-trophy">🏆</button>
       <div id="ui-layer">
