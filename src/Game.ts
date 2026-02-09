@@ -14,6 +14,7 @@ import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
 import bossBgSkyUrl from './assets/boss_bg_sky.png';
 import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
 import bossAppearanceUrl from './assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3';
+import { botData } from './utils/botData';
 
 
 
@@ -1175,7 +1176,7 @@ export class Game {
 
         tbody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
 
-        const { data: profiles, error } = await supabase
+        const { data: realProfiles, error } = await supabase
             .from('profiles')
             .select('username, high_score')
             .order('high_score', { ascending: false })
@@ -1188,13 +1189,23 @@ export class Game {
             return;
         }
 
+        // Merge Real Profiles with Bot Data
+        let allProfiles: any[] = realProfiles || [];
+        allProfiles = [...allProfiles, ...botData];
+
+        // Sort by High Score Descending
+        allProfiles.sort((a, b) => b.high_score - a.high_score);
+
+        // Limit to 1000 total
+        allProfiles = allProfiles.slice(0, 1000);
+
         tbody.innerHTML = '';
-        if (!profiles || profiles.length === 0) {
+        if (allProfiles.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3">No scores yet</td></tr>';
             return;
         }
 
-        profiles.forEach((profile, index) => {
+        allProfiles.forEach((profile, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${index + 1}</td>
