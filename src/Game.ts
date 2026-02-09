@@ -1179,7 +1179,7 @@ export class Game {
             .from('profiles')
             .select('username, high_score')
             .order('high_score', { ascending: false })
-            .limit(100);
+            .limit(1000);
 
         if (error) {
             console.error("Error fetching leaderboard:", error);
