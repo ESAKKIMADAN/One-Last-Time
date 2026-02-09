@@ -91,22 +91,15 @@ export class Boss extends Enemy {
 
         ctx.save();
 
-        // Centering logic if width differs from hitbox
-        const offsetX = (this.width - renderW) / 2;
-        const offsetY = (this.height - renderH); // Bottom align
-
-        if (this.direction === 1) {
-            // Flip for right
-            // Translate to center of where we want to draw, then flip
-            ctx.translate(this.x + this.width / 2, this.y + this.height / 2); // Center of hitbox
+        if (this.direction === -1) {
+            // Flip for Left
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
             ctx.scale(-1, 1);
-            // Draw centered
             ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
         } else {
-            // Draw normally
-            // Align bottom-center of hitbox? Or just simple overlay
-            // Let's align bottom to ensure feet match ground
-            ctx.drawImage(currentImage, this.x + offsetX, this.y + offsetY, renderW, renderH);
+            // Face Right (Normal)
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+            ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
         }
         ctx.restore();
 
