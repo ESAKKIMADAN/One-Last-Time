@@ -169,6 +169,12 @@ export class Game {
                     mouseY >= btnY && mouseY <= btnY + btnH) {
                     this.resetGame();
                 }
+
+                // If Post-Boss Death (Level > 5), allow click anywhere or specific "Main Menu" button
+                if (this.currentLevel > 5) {
+                    // Just reset on any click for now as text is "Click to Main Menu"
+                    this.resetGame();
+                }
             }
         });
 
@@ -437,6 +443,17 @@ export class Game {
             const type = (i % 2) + 1; // Alternate 1, 2, 1, 2...
             this.spawnEnemy(x, y, type);
         }
+
+        // Reset Background if Level > 5 (Infinite Mode)
+        if (level > 5) {
+            this.bgImage = new Image();
+            this.bgImage.src = 'assets/warehouse_bg.png';
+
+            // Resume Music if paused
+            if (this.gameplayMusic.paused) {
+                this.gameplayMusic.play().catch(e => console.warn("Gameplay music resume failed:", e));
+            }
+        }
     }
 
     private gameLoop(timestamp: number) {
@@ -592,9 +609,6 @@ export class Game {
         // Check for Game Over Condition
         if (this.player.health <= 0) {
             this.gameState = GameState.GAME_OVER;
-            if (this.currentLevel >= 5) {
-                this.storyTimer = 0;
-            }
 
             // Stop Gameplay Music
             if (this.gameplayMusic) {
@@ -1021,33 +1035,49 @@ export class Game {
         // Game Over Screen Overlay
         if (this.gameState === GameState.GAME_OVER) {
             // Death Screen
-            // Transparent Black Background
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
             this.ctx.textAlign = 'center';
 
-            // "DEAD" Text - Red Pixel
-            this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
-            this.ctx.font = '60px "Press Start 2P"';
+            if (this.currentLevel > 5) {
+                // Post-Boss Ending Screen
+                this.ctx.fillStyle = '#000000'; // Solid Black
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
+                this.ctx.fillStyle = '#FFFFFF'; // White Text
+                this.ctx.font = '30px "Press Start 2P"';
+                this.ctx.fillText("STORY CHITS", this.canvas.width / 2, this.canvas.height / 2 - 40);
+                this.ctx.fillText("TO BE CONTINUED...", this.canvas.width / 2, this.canvas.height / 2 + 10);
 
-            // "RETRY" Button
-            const btnW = 200;
-            const btnH = 50;
-            const btnX = this.canvas.width / 2 - btnW / 2;
-            const btnY = this.canvas.height / 2 + 50;
+                // Optional: "Click to Restart" subtle text
+                this.ctx.font = '16px "Press Start 2P"';
+                this.ctx.fillStyle = '#666666';
+                this.ctx.fillText("Click to Main Menu", this.canvas.width / 2, this.canvas.height - 50);
 
-            // Button Rect
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillRect(btnX, btnY, btnW, btnH);
+            } else {
+                // Standard Game Over
+                // Transparent Black Background
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            // Button Text
-            this.ctx.fillStyle = '#000000';
-            this.ctx.font = '24px "Press Start 2P"';
-            this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
+                // "DEAD" Text - Red
+                this.ctx.fillStyle = '#ef4444'; // Tailwind Red-500
+                this.ctx.font = '60px "Press Start 2P"';
+                this.ctx.fillText("DEAD", this.canvas.width / 2, this.canvas.height / 2 - 20);
 
+                // "RETRY" Button
+                const btnW = 200;
+                const btnH = 50;
+                const btnX = this.canvas.width / 2 - btnW / 2;
+                const btnY = this.canvas.height / 2 + 50;
+
+                // Button Rect
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(btnX, btnY, btnW, btnH);
+
+                // Button Text
+                this.ctx.fillStyle = '#000000';
+                this.ctx.font = '24px "Press Start 2P"';
+                this.ctx.fillText("RETRY", this.canvas.width / 2, btnY + 35);
+            }
 
             // Don't draw health bar if dead
             const btnTrophy = document.getElementById('btn-trophy');
@@ -1145,7 +1175,7 @@ export class Game {
             .from('profiles')
             .select('username, high_score')
             .order('high_score', { ascending: false })
-            .limit(5);
+            .limit(100);
 
         if (error) {
             console.error("Error fetching leaderboard:", error);
