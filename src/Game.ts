@@ -258,6 +258,11 @@ export class Game {
         if (trophyBtn) trophyBtn.style.display = 'none';
         if (fullscreenBtn) fullscreenBtn.style.display = 'none';
 
+        // Auto Fullscreen for Android
+        if (this.isAndroid()) {
+            this.toggleFullscreen();
+        }
+
         if (this.videoElement) {
             this.videoElement.style.display = 'block';
             this.videoElement.style.opacity = '1';
@@ -285,9 +290,13 @@ export class Game {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if ((document as any).webkitExitFullscreen) {
-                (document as any).webkitExitFullscreen();
+                document.exitFullscreen();
             }
         }
+    }
+
+    private isAndroid(): boolean {
+        return /Android/i.test(navigator.userAgent);
     }
 
     private advanceState() {
