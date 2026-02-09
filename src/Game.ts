@@ -15,6 +15,8 @@ import bossBgSkyUrl from './assets/boss_bg_sky.png';
 import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
 import bossAppearanceUrl from './assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3';
 import level5DialogueUrl from './assets/sounds/jd-to-bhavani-intreval-talking-scene_Qz3qP6uv.mp3';
+import level5HeroDialogueUrl from './assets/sounds/jd-to-bhavani-intreval-talking-scene_lhKnVFAo.mp3';
+import bossDialogueUrl from './assets/boss/1-removebg-preview.png';
 
 
 
@@ -59,6 +61,9 @@ export class Game {
     private player: Player;
     private bullets: Bullet[] = [];
     private level5DialogueMusic: HTMLAudioElement;
+    private level5HeroDialogueMusic: HTMLAudioElement;
+    private bossDialogueImage: HTMLImageElement;
+    private dialogueStep: number = 0; // 0: None, 1: Boss, 2: Hero
     private enemies: Enemy[] = [];
     private floatingTexts: FloatingText[] = [];
     private healthPickups: HealthPickup[] = [];
@@ -141,9 +146,17 @@ export class Game {
         this.level4DialogueMusic = new Audio(level4DialogueUrl);
         this.level4DialogueMusic.loop = false;
 
-        // Load Level 5 Dialogue Music
+        // Load Level 5 Dialogue Music (Boss)
         this.level5DialogueMusic = new Audio(level5DialogueUrl);
         this.level5DialogueMusic.loop = false;
+
+        // Load Level 5 Hero Dialogue Music
+        this.level5HeroDialogueMusic = new Audio(level5HeroDialogueUrl);
+        this.level5HeroDialogueMusic.loop = false;
+
+        // Load Boss Dialogue Image
+        this.bossDialogueImage = new Image();
+        this.bossDialogueImage.src = bossDialogueUrl;
 
         // Load Leo Dialogue Sound
         this.leoDialogueSound = new Audio(leoDialogueUrl);
@@ -579,7 +592,50 @@ export class Game {
         }
 
         if (this.gameState === GameState.DIALOGUE) {
-            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : (this.currentLevel === 4 ? this.level4DialogueMusic.ended : this.level5DialogueMusic.ended)))) {
+
+            // Level 5 Sequence Handling
+            if (this.currentLevel === 5) {
+                if (this.dialogueStep === 1) {
+                    // Boss Talking
+                    if (this.input.isDown('Enter') || this.input.isDown('Space') || this.level5DialogueMusic.ended) {
+                        if (this.toggleCooldown <= 0) {
+                            // Stop Boss Music
+                            this.level5DialogueMusic.pause();
+                            this.level5DialogueMusic.currentTime = 0;
+
+                            // Start Hero Dialogue
+                            this.dialogueStep = 2;
+                            this.level5HeroDialogueMusic.currentTime = 0;
+                            this.level5HeroDialogueMusic.play().catch(e => console.error("L5 Hero Dialogue failed:", e));
+                            this.toggleCooldown = 500;
+                        }
+                    }
+                } else if (this.dialogueStep === 2) {
+                    // Hero Talking
+                    if (this.input.isDown('Enter') || this.input.isDown('Space') || this.level5HeroDialogueMusic.ended) {
+                        if (this.toggleCooldown <= 0) {
+                            // Stop Hero Music
+                            this.level5HeroDialogueMusic.pause();
+                            this.level5HeroDialogueMusic.currentTime = 0;
+
+                            // End Dialogue
+                            this.gameState = GameState.PLAYING;
+                            this.dialogueStep = 0;
+
+                            // Start Gameplay Music
+                            this.gameplayMusic.currentTime = 0;
+                            this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+
+                            // Start Level 5
+                            this.startLevel(5);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Normal Dialogue Handling (Level 1 & 4)
+            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : this.level4DialogueMusic.ended))) {
                 this.gameState = GameState.PLAYING;
 
                 // Stop Dialogue Musics
@@ -587,8 +643,7 @@ export class Game {
                 this.dialogueMusic.currentTime = 0;
                 this.level4DialogueMusic.pause();
                 this.level4DialogueMusic.currentTime = 0;
-                this.level5DialogueMusic.pause();
-                this.level5DialogueMusic.currentTime = 0;
+                // Level 5 handled distinctly above
 
                 // Start Gameplay Music
                 this.gameplayMusic.currentTime = 0;
@@ -600,8 +655,6 @@ export class Game {
                         this.startLevel(1);
                     } else if (this.currentLevel === 4) {
                         this.startLevel(4);
-                    } else if (this.currentLevel === 5) {
-                        this.startLevel(5);
                     }
                 }
             }
@@ -662,6 +715,7 @@ export class Game {
             // Trigger Dialogue before Level 5
             if (this.currentLevel === 5) {
                 this.gameState = GameState.DIALOGUE;
+                this.dialogueStep = 1; // Start with Boss
                 this.gameplayMusic.pause(); // Stop gameplay music
 
                 this.level5DialogueMusic.currentTime = 0;
@@ -937,20 +991,36 @@ export class Game {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            // Draw Character (Left side, large)
-            if (this.dialogueImage.complete && this.dialogueImage.naturalWidth > 0) {
+            let characterImg = this.dialogueImage;
+
+            // Override image for Boss Dialogue Phase
+            if (this.currentLevel === 5 && this.dialogueStep === 1) {
+                characterImg = this.bossDialogueImage;
+            }
+
+            // Draw Character
+            if (characterImg.complete && characterImg.naturalWidth > 0) {
                 // Calculate scale to fit canvas height (e.g. 80%)
-                const naturalW = this.dialogueImage.naturalWidth || 69;
-                const naturalH = this.dialogueImage.naturalHeight || 116;
+                const naturalW = characterImg.naturalWidth || 69;
+                const naturalH = characterImg.naturalHeight || 116;
                 const aspectRatio = naturalW / naturalH;
 
                 const imgH = this.canvas.height * 0.8; // 80% of screen height
                 const imgW = imgH * aspectRatio;
 
-                const x = 50;
+                // Position: If Boss (Step 1), maybe flip or put on Right?
+                // For simplicity, let's just keep position but maybe mirror if it faces wrong way?
+                // Assuming default is Left.
+
+                let x = 50;
+                if (this.currentLevel === 5 && this.dialogueStep === 1) {
+                    // Boss on Right
+                    x = this.canvas.width - imgW - 50;
+                }
+
                 const y = this.canvas.height - imgH - 50; // Moved up by 50px
 
-                this.ctx.drawImage(this.dialogueImage, x, y, imgW, imgH);
+                this.ctx.drawImage(characterImg, x, y, imgW, imgH);
             }
 
             // Draw Speech Bubble
