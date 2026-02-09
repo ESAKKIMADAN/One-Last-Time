@@ -1023,6 +1023,8 @@ export class Game {
                 this.ctx.drawImage(characterImg, x, y, imgW, imgH);
             }
 
+
+
             // Draw Speech Bubble
             const bubbleX = 300;
             const bubbleY = 100;
@@ -1048,7 +1050,27 @@ export class Game {
             this.ctx.font = '20px "Press Start 2P"';
             this.ctx.textAlign = 'left';
 
-            if (this.currentLevel === 4) {
+            if (this.currentLevel === 5) {
+                if (this.dialogueStep === 1) {
+                    const currentTime = this.level5DialogueMusic.currentTime;
+                    this.ctx.font = '12px "Press Start 2P"';
+
+                    // Estimated timestamps based on text
+                    if (currentTime < 4) {
+                        this.ctx.fillText("Naa solla poradhu onnum", bubbleX + 30, bubbleY + 40);
+                        this.ctx.fillText("unakku pudhusilla...", bubbleX + 30, bubbleY + 70);
+                    } else if (currentTime < 8) {
+                        this.ctx.fillText("Irundhalum naa solren", bubbleX + 30, bubbleY + 60);
+                        this.ctx.fillText("nee kelu.", bubbleX + 30, bubbleY + 90);
+                    } else {
+                        this.ctx.fillText("I'm waiting.", bubbleX + 30, bubbleY + 70);
+                    }
+                } else if (this.dialogueStep === 2) {
+                    // Hero Dialogue - Placeholder or specific text if provided later
+                    this.ctx.font = '14px "Press Start 2P"';
+                    this.ctx.fillText("...", bubbleX + 50, bubbleY + 70);
+                }
+            } else if (this.currentLevel === 4) {
                 const currentTime = this.level4DialogueMusic.currentTime;
 
                 // Text 1: 0s - 7s
