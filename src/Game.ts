@@ -215,12 +215,12 @@ export class Game {
 
                 if (mouseX >= btnX && mouseX <= btnX + btnW &&
                     mouseY >= btnY && mouseY <= btnY + btnH) {
-                    this.returnToTitle();
+                    this.restartGame();
                 }
 
                 // If Post-Boss Death (Level > 5), allow click anywhere
                 if (this.currentLevel > 5) {
-                    this.returnToTitle();
+                    this.restartGame();
                 }
             }
             // Tap to Start / Advance (For Mobile/Mouse)
@@ -384,23 +384,9 @@ export class Game {
     }
 
     public returnToTitle() {
-        this.player = new Player(100, 360);
-        this.bullets = [];
-        this.enemies = [];
-        this.floatingTexts = [];
-        this.healthPickups = [];
-        this.score = 0;
-        this.currentLevel = 1;
-        this.boss = null;
-        this.powerUnlocked = false;
-        this.killCount = 0;
-        this.cameraX = 0;
+        this.resetGameState();
         this.gameState = GameState.START_SCREEN;
         this.toggleCooldown = 1500;
-
-        // Reset Background
-        this.bgImage = new Image();
-        this.bgImage.src = 'assets/warehouse_bg.png';
 
         // Reset music
         if (this.gameplayMusic) {
@@ -438,6 +424,48 @@ export class Game {
                 authContainer.style.display = 'flex';
             }
         }
+    }
+
+    public restartGame() {
+        this.resetGameState();
+        this.gameState = GameState.PLAYING;
+        this.toggleCooldown = 500;
+
+        // Reset music
+        if (this.gameplayMusic) {
+            this.gameplayMusic.pause();
+            this.gameplayMusic.currentTime = 0;
+        }
+
+        // Hide UI Layer
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) {
+            uiLayer.style.display = 'none';
+        }
+
+        this.startLevel(1);
+
+        if (this.gameplayMusic) {
+            this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+        }
+    }
+
+    private resetGameState() {
+        this.player = new Player(100, 360);
+        this.bullets = [];
+        this.enemies = [];
+        this.floatingTexts = [];
+        this.healthPickups = [];
+        this.score = 0;
+        this.currentLevel = 1;
+        this.boss = null;
+        this.powerUnlocked = false;
+        this.killCount = 0;
+        this.cameraX = 0;
+
+        // Reset Background
+        this.bgImage = new Image();
+        this.bgImage.src = 'assets/warehouse_bg.png';
     }
 
 
