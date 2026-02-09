@@ -247,8 +247,10 @@ export class Game {
         // Hide UI Elements
         const logoutBtn = document.getElementById('btn-logout');
         const trophyBtn = document.getElementById('btn-trophy');
+        const fullscreenBtn = document.getElementById('btn-fullscreen');
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (trophyBtn) trophyBtn.style.display = 'none';
+        if (fullscreenBtn) fullscreenBtn.style.display = 'none';
 
         if (this.videoElement) {
             this.videoElement.style.display = 'block';
@@ -260,6 +262,25 @@ export class Game {
             });
         } else {
             this.startDialogue();
+        }
+    }
+
+    private toggleFullscreen() {
+        const container = document.getElementById('game-container');
+        if (!container) return;
+
+        if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if ((container as any).webkitRequestFullscreen) {
+                (container as any).webkitRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if ((document as any).webkitExitFullscreen) {
+                (document as any).webkitExitFullscreen();
+            }
         }
     }
 
@@ -470,6 +491,42 @@ export class Game {
     }
 
     private setupUI() {
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        if (btnFullscreen) {
+            btnFullscreen.addEventListener('click', () => {
+                this.toggleFullscreen();
+            });
+        }
+
+        // Mobile Action Button Overrides (Auto-switch skins)
+        const btnShoot = document.getElementById('btn-shoot'); // PUNCH
+        const btnJump = document.getElementById('btn-jump');   // GUN
+
+        if (btnShoot) {
+            btnShoot.addEventListener('touchstart', () => {
+                if (this.gameState === GameState.PLAYING && !this.player.isAltSkinActive) {
+                    this.player.toggleCharacter(); // Switch to Fist for Punch
+                }
+            });
+            btnShoot.addEventListener('mousedown', () => {
+                if (this.gameState === GameState.PLAYING && !this.player.isAltSkinActive) {
+                    this.player.toggleCharacter();
+                }
+            });
+        }
+
+        if (btnJump) {
+            btnJump.addEventListener('touchstart', () => {
+                if (this.gameState === GameState.PLAYING && this.player.isAltSkinActive) {
+                    this.player.toggleCharacter(); // Switch to Gun for Shooting
+                }
+            });
+            btnJump.addEventListener('mousedown', () => {
+                if (this.gameState === GameState.PLAYING && this.player.isAltSkinActive) {
+                    this.player.toggleCharacter();
+                }
+            });
+        }
 
         const btnGoogleLogin = document.getElementById('btn-google-login');
 
