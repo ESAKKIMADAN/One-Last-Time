@@ -1180,13 +1180,13 @@ export class Game {
 
                 this.ctx.fillStyle = '#FFFFFF'; // White Text
                 this.ctx.font = '30px "Press Start 2P"';
-                this.ctx.fillText("STORY CHITS", this.canvas.width / 2, this.canvas.height / 2 - 40);
+                this.ctx.fillText("STORY ", this.canvas.width / 2, this.canvas.height / 2 - 40);
                 this.ctx.fillText("TO BE CONTINUED...", this.canvas.width / 2, this.canvas.height / 2 + 10);
 
                 // Optional: "Click to Restart" subtle text
                 this.ctx.font = '16px "Press Start 2P"';
                 this.ctx.fillStyle = '#666666';
-                this.ctx.fillText("Click to Main Menu", this.canvas.width / 2, this.canvas.height - 50);
+
 
             } else {
                 // Standard Game Over
