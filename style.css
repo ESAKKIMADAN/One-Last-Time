@@ -378,3 +378,60 @@ button[type="submit"]:hover {
   /* Blue tint */
   border: 2px solid rgba(59, 130, 246, 0.8);
 }
+
+/* Landscape Warning Overlay */
+#landscape-warning {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  color: #fff;
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.warning-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.phone-icon {
+  font-size: 60px;
+  animation: rotatePhone 2s infinite ease-in-out;
+}
+
+@keyframes rotatePhone {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(90deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+#landscape-warning p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Show only on mobile in portrait mode */
+@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+  #landscape-warning {
+    display: flex;
+  }
+}

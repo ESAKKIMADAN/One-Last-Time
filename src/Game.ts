@@ -214,7 +214,125 @@ export class Game {
                     this.returnToTitle();
                 }
             }
+            // Tap to Start / Advance (For Mobile/Mouse)
+            else if (this.gameState === GameState.START_SCREEN) {
+                // We reuse the update loop's logic but trigger it manually if needed, 
+                // or just simulate the Enter key. 
+                // However, the cleanest is to just perform the same action here.
+                if (this.toggleCooldown <= 0) {
+                    // This will be caught in the next update tick if we set a flag, 
+                    // or we can just trigger the transition here.
+                    this.triggerStartGame();
+                }
+            }
+            else if (this.gameState === GameState.DIALOGUE || this.gameState === GameState.VIDEO_INTRO) {
+                if (this.toggleCooldown <= 0) {
+                    this.advanceState();
+                }
+            }
         });
+    }
+
+    private triggerStartGame() {
+        if (this.gameState !== GameState.START_SCREEN) return;
+
+        // Stop Title Music
+        this.bgMusic.pause();
+        this.bgMusic.currentTime = 0;
+
+        // switch to VIDEO_INTRO
+        this.gameState = GameState.VIDEO_INTRO;
+        this.toggleCooldown = 500;
+
+        // Hide UI Elements
+        const logoutBtn = document.getElementById('btn-logout');
+        const trophyBtn = document.getElementById('btn-trophy');
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (trophyBtn) trophyBtn.style.display = 'none';
+
+        if (this.videoElement) {
+            this.videoElement.style.display = 'block';
+            this.videoElement.style.opacity = '1';
+            this.videoElement.play().catch(e => {
+                console.error("Video play failed:", e);
+                this.videoElement.style.display = 'none';
+                this.startDialogue();
+            });
+        } else {
+            this.startDialogue();
+        }
+    }
+
+    private advanceState() {
+        if (this.gameState === GameState.VIDEO_INTRO) {
+            if (this.videoElement && this.fadeState === 'NONE') {
+                this.videoElement.pause();
+                this.triggerTransition(() => {
+                    this.videoElement.style.display = 'none';
+                    this.startDialogue();
+                });
+            }
+            this.handleDialogueProgression();
+        }
+    }
+
+    private handleDialogueProgression() {
+        if (this.gameState !== GameState.DIALOGUE) return;
+
+        // Level 5 Sequence Handling
+        if (this.currentLevel === 5) {
+            if (this.dialogueStep === 1) {
+                // Stop Boss Music
+                this.level5DialogueMusic.pause();
+                this.level5DialogueMusic.currentTime = 0;
+
+                // Start Hero Dialogue
+                this.dialogueStep = 2;
+                this.level5HeroDialogueMusic.currentTime = 0;
+                this.level5HeroDialogueMusic.play().catch(e => console.error("L5 Hero Dialogue failed:", e));
+                this.toggleCooldown = 500;
+            } else if (this.dialogueStep === 2) {
+                // Stop Hero Music
+                this.level5HeroDialogueMusic.pause();
+                this.level5HeroDialogueMusic.currentTime = 0;
+
+                // End Dialogue
+                this.gameState = GameState.PLAYING;
+                this.dialogueStep = 0;
+
+                // Start Gameplay Music
+                this.gameplayMusic.currentTime = 0;
+                this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+
+                // Start Level 5
+                this.startLevel(5);
+                this.toggleCooldown = 500;
+            }
+            return;
+        }
+
+        // Normal Dialogue Handling (Level 1 & 4)
+        this.gameState = GameState.PLAYING;
+
+        // Stop Dialogue Musics
+        this.dialogueMusic.pause();
+        this.dialogueMusic.currentTime = 0;
+        this.level4DialogueMusic.pause();
+        this.level4DialogueMusic.currentTime = 0;
+
+        // Start Gameplay Music
+        this.gameplayMusic.currentTime = 0;
+        this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
+
+        // Start Level Logic
+        if (this.enemies.length === 0) {
+            if (this.currentLevel === 1) {
+                this.startLevel(1);
+            } else if (this.currentLevel === 4) {
+                this.startLevel(4);
+            }
+        }
+        this.toggleCooldown = 500;
     }
 
     public returnToTitle() {
@@ -598,123 +716,28 @@ export class Game {
         }
 
         if (this.gameState === GameState.START_SCREEN) {
-            // Wait for UI Interaction (Login) is done.
-            // Converting to Title Screen Logic: Wait for any key to start Intro Video
             if (this.input.isDown('Enter') || this.input.isDown('Space')) {
-                // Stop Title Music
-                this.bgMusic.pause();
-                this.bgMusic.currentTime = 0;
-
                 if (this.toggleCooldown > 0) return;
-
-                // switch to VIDEO_INTRO
-                this.gameState = GameState.VIDEO_INTRO;
-                this.toggleCooldown = 500; // Prevent immediate skip if Enter is held
-
-                // Hide UI Elements
-                const logoutBtn = document.getElementById('btn-logout');
-                const trophyBtn = document.getElementById('btn-trophy');
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                if (trophyBtn) trophyBtn.style.display = 'none';
-
-                if (this.videoElement) {
-                    this.videoElement.style.display = 'block';
-                    this.videoElement.style.opacity = '1';
-                    this.videoElement.play().catch(e => {
-                        console.error("Video play failed:", e);
-                        // Fallback to dialogue if video fails
-                        this.videoElement.style.display = 'none';
-                        this.startDialogue();
-                    });
-                }
-                else {
-                    this.startDialogue();
-                }
+                this.triggerStartGame();
             }
             return;
         }
 
         if (this.gameState === GameState.VIDEO_INTRO) {
-            // Wait for video to end (handled by onended)
-            // Optional: Skip with Escape or Enter
             if (this.toggleCooldown <= 0 && (this.input.isDown('Escape') || this.input.isDown('Enter'))) {
-                if (this.videoElement && this.fadeState === 'NONE') {
-                    this.videoElement.pause();
-                    this.triggerTransition(() => {
-                        this.videoElement.style.display = 'none';
-                        this.startDialogue();
-                    });
-                }
+                this.advanceState();
             }
-
             return;
         }
 
         if (this.gameState === GameState.DIALOGUE) {
-
-            // Level 5 Sequence Handling
-            if (this.currentLevel === 5) {
-                if (this.dialogueStep === 1) {
-                    // Boss Talking
-                    if (this.input.isDown('Enter') || this.input.isDown('Space') || this.level5DialogueMusic.ended) {
-                        if (this.toggleCooldown <= 0) {
-                            // Stop Boss Music
-                            this.level5DialogueMusic.pause();
-                            this.level5DialogueMusic.currentTime = 0;
-
-                            // Start Hero Dialogue
-                            this.dialogueStep = 2;
-                            this.level5HeroDialogueMusic.currentTime = 0;
-                            this.level5HeroDialogueMusic.play().catch(e => console.error("L5 Hero Dialogue failed:", e));
-                            this.toggleCooldown = 500;
-                        }
-                    }
-                } else if (this.dialogueStep === 2) {
-                    // Hero Talking
-                    if (this.input.isDown('Enter') || this.input.isDown('Space') || this.level5HeroDialogueMusic.ended) {
-                        if (this.toggleCooldown <= 0) {
-                            // Stop Hero Music
-                            this.level5HeroDialogueMusic.pause();
-                            this.level5HeroDialogueMusic.currentTime = 0;
-
-                            // End Dialogue
-                            this.gameState = GameState.PLAYING;
-                            this.dialogueStep = 0;
-
-                            // Start Gameplay Music
-                            this.gameplayMusic.currentTime = 0;
-                            this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
-
-                            // Start Level 5
-                            this.startLevel(5);
-                        }
-                    }
+            if (this.input.isDown('Enter') || this.input.isDown('Space')) {
+                if (this.toggleCooldown <= 0) {
+                    this.handleDialogueProgression();
                 }
-                return;
-            }
-
-            // Normal Dialogue Handling (Level 1 & 4)
-            if (this.toggleCooldown <= 0 && ((this.input.isDown('Enter') || this.input.isDown('Space')) || (this.currentLevel === 1 ? this.dialogueMusic.ended : this.level4DialogueMusic.ended))) {
-                this.gameState = GameState.PLAYING;
-
-                // Stop Dialogue Musics
-                this.dialogueMusic.pause();
-                this.dialogueMusic.currentTime = 0;
-                this.level4DialogueMusic.pause();
-                this.level4DialogueMusic.currentTime = 0;
-                // Level 5 handled distinctly above
-
-                // Start Gameplay Music
-                this.gameplayMusic.currentTime = 0;
-                this.gameplayMusic.play().catch(e => console.warn("Gameplay music failed:", e));
-
-                // Start Level Logic
-                if (this.enemies.length === 0) {
-                    if (this.currentLevel === 1) {
-                        this.startLevel(1);
-                    } else if (this.currentLevel === 4) {
-                        this.startLevel(4);
-                    }
+            } else if (this.currentLevel === 1 ? this.dialogueMusic.ended : (this.currentLevel === 4 ? this.level4DialogueMusic.ended : (this.dialogueStep === 1 ? this.level5DialogueMusic.ended : this.level5HeroDialogueMusic.ended))) {
+                if (this.toggleCooldown <= 0) {
+                    this.handleDialogueProgression();
                 }
             }
             return;
@@ -1010,8 +1033,10 @@ export class Game {
             if (Math.floor(now / 500) % 2 === 0) {
                 this.ctx.font = '20px "Press Start 2P"';
                 this.ctx.lineWidth = 3;
-                this.ctx.strokeText("PRESS ENTER TO START", 40, this.canvas.height / 2 + 40);
-                this.ctx.fillText("PRESS ENTER TO START", 40, this.canvas.height / 2 + 40);
+                const isMobile = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+                const startText = isMobile ? "TAP TO START" : "PRESS ENTER TO START";
+                this.ctx.strokeText(startText, 40, this.canvas.height / 2 + 40);
+                this.ctx.fillText(startText, 40, this.canvas.height / 2 + 40);
             }
 
             return;
