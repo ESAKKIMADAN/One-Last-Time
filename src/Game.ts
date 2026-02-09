@@ -77,6 +77,9 @@ export class Game {
     private fadeState: 'NONE' | 'FADE_OUT' | 'FADE_IN' = 'NONE';
     private onFadeOutComplete: (() => void) | null = null;
 
+    // UI State
+    private instructionDismissed: boolean = false;
+
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
         this.ctx = ctx;
@@ -404,7 +407,8 @@ export class Game {
     private startLevel(level: number) {
         this.enemies = [];
         this.boss = null;
-        this.powerUnlocked = false; // Reset power unlock each level? Or keep it? The user said "when 5 level only alter character need to activate", so assuming per-level or just specific to L5 boss fight. Safe to reset.
+        this.powerUnlocked = false;
+        this.instructionDismissed = false; // Reset instruction state for new level/restart
 
         if (level === 5) {
             console.log("BOSS LEVEL!");
@@ -554,8 +558,8 @@ export class Game {
 
         if (this.gameState === GameState.VIDEO_INTRO) {
             // Wait for video to end (handled by onended)
-            // Optional: Skip with Escape?
-            if (this.input.isDown('Escape')) {
+            // Optional: Skip with Escape or Enter
+            if (this.input.isDown('Escape') || this.input.isDown('Enter')) {
                 if (this.videoElement && this.fadeState === 'NONE') {
                     this.videoElement.pause();
                     this.triggerTransition(() => {
@@ -1021,7 +1025,7 @@ export class Game {
         this.ctx.fillText(`SCORE: ${this.score}`, this.canvas.width - 20, 70);
 
         // Draw Power Unlock UI
-        if (this.powerUnlocked) {
+        if (this.powerUnlocked && !this.instructionDismissed) {
             this.ctx.textAlign = 'center';
             this.ctx.fillStyle = '#3b82f6'; // Blue
             this.ctx.font = '16px "Press Start 2P"';
@@ -1131,10 +1135,10 @@ export class Game {
             return;
         }
         this.player.toggleCharacter();
+        this.instructionDismissed = true; // Hide instruction after use
         this.leoDialogueSound.currentTime = 0;
         this.leoDialogueSound.play().catch(e => console.warn("Leo dialogue sound failed:", e));
         this.toggleCooldown = 500; // 500ms debounce
-
     }
 
     private async saveScore() {
