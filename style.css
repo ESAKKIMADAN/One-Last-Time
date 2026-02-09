@@ -379,9 +379,9 @@ button[type="submit"]:hover {
 #action-buttons {
   pointer-events: auto;
   display: flex;
-  gap: 20px;
+  gap: 15px;
+  /* Reduced gap to accommodate 3 buttons */
   align-items: flex-end;
-  /* Align to bottom */
 }
 
 .action-btn {
@@ -420,6 +420,30 @@ button[type="submit"]:hover {
   background-color: rgba(59, 130, 246, 0.3);
   /* Blue tint */
   border: 2px solid rgba(59, 130, 246, 0.8);
+}
+
+#btn-power {
+  background-color: rgba(168, 85, 247, 0.3);
+  /* Purple tint */
+  border: 2px solid rgba(168, 85, 247, 0.8);
+  animation: pulsePower 1.5s infinite ease-in-out;
+}
+
+@keyframes pulsePower {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.8);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* Landscape Warning Overlay */

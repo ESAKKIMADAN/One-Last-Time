@@ -758,20 +758,37 @@ export class Game {
 
         // Check for Boss Phase 2 Interaction
         if (this.boss && this.boss.active && this.boss.health <= this.boss.maxHealth / 2) {
+            // Show Power button on mobile
+            const btnPower = document.getElementById('btn-power');
+            if (btnPower && btnPower.style.display === 'none') {
+                btnPower.style.display = 'flex';
+            }
+
             if (this.input.isDown('KeyX')) {
                 // Change Background
                 this.bgImage = this.bossBgSkyImage;
 
+                // Force Character Change to Fist mode for cinematic feel/logic
+                if (!this.player.isAltSkinActive) {
+                    this.player.toggleCharacter();
+                }
+
                 // "Move X Y" - Resetting positions or moving to a specific spot
-                // Assuming user wants to teleport to a specific arena location or just reset camera
-                // For now, let's center the camera on the boss
                 this.player.x = 400;
                 this.player.y = 360;
                 this.boss.x = 600;
                 this.boss.y = 232;
 
-                // Optional: Visual effect or message?
+                // Hide Power button after use
+                if (btnPower) btnPower.style.display = 'none';
+
                 console.log("Phase 2 Activated!");
+            }
+        } else {
+            // Ensure Power button is hidden if boss dies or health is > 50%
+            const btnPower = document.getElementById('btn-power');
+            if (btnPower && btnPower.style.display !== 'none') {
+                btnPower.style.display = 'none';
             }
         }
 
