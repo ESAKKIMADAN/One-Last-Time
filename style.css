@@ -379,14 +379,14 @@ button[type="submit"]:hover {
 #action-buttons {
   pointer-events: auto;
   display: flex;
-  gap: 15px;
-  /* Reduced gap to accommodate 3 buttons */
+  gap: 10px;
+  /* Further reduced gap for 4 buttons */
   align-items: flex-end;
 }
 
 .action-btn {
-  width: 80px;
-  /* Wider for labels */
+  width: 70px;
+  /* Slightly narrower for 4 buttons */
   height: 60px;
   border-radius: 12px;
   /* Semi-rounded square for labels */
@@ -420,6 +420,18 @@ button[type="submit"]:hover {
   background-color: rgba(59, 130, 246, 0.3);
   /* Blue tint */
   border: 2px solid rgba(59, 130, 246, 0.8);
+}
+
+#btn-attack {
+  background-color: rgba(239, 68, 68, 0.3);
+  /* Red tint */
+  border: 2px solid rgba(239, 68, 68, 0.8);
+}
+
+#btn-switch {
+  background-color: rgba(74, 222, 128, 0.3);
+  /* Green tint */
+  border: 2px solid rgba(74, 222, 128, 0.8);
 }
 
 #btn-power {

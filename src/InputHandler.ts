@@ -44,9 +44,10 @@ export class InputHandler {
         bindButton('btn-down', 'ArrowDown');
         bindButton('btn-left', 'ArrowLeft');
         bindButton('btn-right', 'ArrowRight');
-        bindButton('btn-shoot', 'KeyF');
+        bindButton('btn-attack', 'KeyF');
         bindButton('btn-jump', 'Space');
         bindButton('btn-power', 'KeyX');
+        bindButton('btn-switch', 'KeyC');
     }
 
     public isDown(code: string): boolean {

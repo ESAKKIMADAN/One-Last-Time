@@ -505,31 +505,17 @@ export class Game {
             });
         }
 
-        // Mobile Action Button Overrides (Auto-switch skins)
-        const btnShoot = document.getElementById('btn-shoot'); // PUNCH
-        const btnJump = document.getElementById('btn-jump');   // GUN
+        // Mobile Action Button Overrides (Manual Switch)
+        const btnSwitch = document.getElementById('btn-switch');
 
-        if (btnShoot) {
-            btnShoot.addEventListener('touchstart', () => {
-                if (this.gameState === GameState.PLAYING && !this.player.isAltSkinActive) {
-                    this.player.toggleCharacter(); // Switch to Fist for Punch
-                }
-            });
-            btnShoot.addEventListener('mousedown', () => {
-                if (this.gameState === GameState.PLAYING && !this.player.isAltSkinActive) {
+        if (btnSwitch) {
+            btnSwitch.addEventListener('touchstart', () => {
+                if (this.gameState === GameState.PLAYING) {
                     this.player.toggleCharacter();
                 }
             });
-        }
-
-        if (btnJump) {
-            btnJump.addEventListener('touchstart', () => {
-                if (this.gameState === GameState.PLAYING && this.player.isAltSkinActive) {
-                    this.player.toggleCharacter(); // Switch to Gun for Shooting
-                }
-            });
-            btnJump.addEventListener('mousedown', () => {
-                if (this.gameState === GameState.PLAYING && this.player.isAltSkinActive) {
+            btnSwitch.addEventListener('mousedown', () => {
+                if (this.gameState === GameState.PLAYING) {
                     this.player.toggleCharacter();
                 }
             });
