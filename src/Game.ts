@@ -505,21 +505,9 @@ export class Game {
             });
         }
 
-        // Mobile Action Button Overrides (Manual Switch)
-        const btnSwitch = document.getElementById('btn-switch');
-
-        if (btnSwitch) {
-            btnSwitch.addEventListener('touchstart', () => {
-                if (this.gameState === GameState.PLAYING) {
-                    this.player.toggleCharacter();
-                }
-            });
-            btnSwitch.addEventListener('mousedown', () => {
-                if (this.gameState === GameState.PLAYING) {
-                    this.player.toggleCharacter();
-                }
-            });
-        }
+        // Mobile Action Button Overrides (Manual Switch - Power/X)
+        // No specific listener needed for btn-power here as it's bound via InputHandler
+        // We'll handle its visibility in the update loop based on the story state.
 
         const btnGoogleLogin = document.getElementById('btn-google-login');
 
@@ -652,7 +640,6 @@ export class Game {
     private startLevel(level: number) {
         this.enemies = [];
         this.boss = null;
-        this.powerUnlocked = false;
         this.instructionDismissed = false; // Reset instruction state for new level/restart
 
         if (level === 5) {
@@ -742,39 +729,30 @@ export class Game {
             }
         }
 
-        // Check for Boss Phase 2 Interaction
-        if (this.boss && this.boss.active && this.boss.health <= this.boss.maxHealth / 2) {
-            // Show Power button on mobile
-            const btnPower = document.getElementById('btn-power');
-            if (btnPower && btnPower.style.display === 'none') {
-                btnPower.style.display = 'flex';
-            }
+        // Control Visibility of mobile SWITCH button (tied to KeyX/Power)
+        const btnPower = document.getElementById('btn-power');
+        if (btnPower) {
+            btnPower.style.display = this.powerUnlocked ? 'flex' : 'none';
+        }
 
-            if (this.input.isDown('KeyX')) {
+        // Check for Boss Phase 2 Interaction (Triggered by KeyX when boss is at 50% HP)
+        if (this.boss && this.boss.active && this.boss.health <= this.boss.maxHealth / 2) {
+            if (this.input.isDown('KeyX') && this.bgImage !== this.bossBgSkyImage) {
                 // Change Background
                 this.bgImage = this.bossBgSkyImage;
 
-                // Force Character Change to Fist mode for cinematic feel/logic
+                // Ensure character is in Fist mode for Phase 2 start
                 if (!this.player.isAltSkinActive) {
                     this.player.toggleCharacter();
                 }
 
-                // "Move X Y" - Resetting positions or moving to a specific spot
+                // Reset positions
                 this.player.x = 400;
                 this.player.y = 360;
                 this.boss.x = 600;
                 this.boss.y = 232;
 
-                // Hide Power button after use
-                if (btnPower) btnPower.style.display = 'none';
-
                 console.log("Phase 2 Activated!");
-            }
-        } else {
-            // Ensure Power button is hidden if boss dies or health is > 50%
-            const btnPower = document.getElementById('btn-power');
-            if (btnPower && btnPower.style.display !== 'none') {
-                btnPower.style.display = 'none';
             }
         }
 

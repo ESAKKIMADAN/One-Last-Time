@@ -379,14 +379,14 @@ button[type="submit"]:hover {
 #action-buttons {
   pointer-events: auto;
   display: flex;
-  gap: 10px;
-  /* Further reduced gap for 4 buttons */
+  gap: 15px;
+  /* Restored gap for 3 buttons */
   align-items: flex-end;
 }
 
 .action-btn {
-  width: 70px;
-  /* Slightly narrower for 4 buttons */
+  width: 80px;
+  /* Restored width */
   height: 60px;
   border-radius: 12px;
   /* Semi-rounded square for labels */
