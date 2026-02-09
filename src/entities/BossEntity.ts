@@ -41,6 +41,9 @@ export class Boss extends Enemy {
     update(deltaTime: number, playerX: number, playerY: number): void {
         super.update(deltaTime, playerX, playerY);
 
+        // Always face player, even when not moving
+        this.direction = playerX > this.x ? 1 : -1;
+
         // State Logic (Simple)
         const dist = Math.abs(playerX - this.x);
 
