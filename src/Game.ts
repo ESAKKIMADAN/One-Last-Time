@@ -197,14 +197,17 @@ export class Game {
             });
         }
 
-        // Mouse Listener for UI Interactions (Retry Button)
-        this.canvas.addEventListener('click', (e) => {
-            if (this.gameState === GameState.GAME_OVER) {
-                const rect = this.canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+        // Unified Listener for UI Interactions (Retry Button, Start Screen, etc.)
+        const handleCanvasInteraction = (clientX: number, clientY: number) => {
+            const rect = this.canvas.getBoundingClientRect();
+            // Map client coordinates to internal canvas resolution (800x450)
+            const scaleX = this.canvas.width / rect.width;
+            const scaleY = this.canvas.height / rect.height;
+            const mouseX = (clientX - rect.left) * scaleX;
+            const mouseY = (clientY - rect.top) * scaleY;
 
-                // Retry Button Coordinates (Centered)
+            if (this.gameState === GameState.GAME_OVER) {
+                // Retry Button Coordinates (Centered in 800x450 space)
                 const btnW = 200;
                 const btnH = 50;
                 const btnX = this.canvas.width / 2 - btnW / 2;
@@ -222,12 +225,7 @@ export class Game {
             }
             // Tap to Start / Advance (For Mobile/Mouse)
             else if (this.gameState === GameState.START_SCREEN) {
-                // We reuse the update loop's logic but trigger it manually if needed, 
-                // or just simulate the Enter key. 
-                // However, the cleanest is to just perform the same action here.
                 if (this.toggleCooldown <= 0) {
-                    // This will be caught in the next update tick if we set a flag, 
-                    // or we can just trigger the transition here.
                     this.triggerStartGame();
                 }
             }
@@ -236,7 +234,20 @@ export class Game {
                     this.advanceState();
                 }
             }
+        };
+
+        this.canvas.addEventListener('click', (e) => {
+            handleCanvasInteraction(e.clientX, e.clientY);
         });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                // Prevent default can sometimes block legitimate scrolling, 
+                // but here we are on the game canvas in landscape.
+                // e.preventDefault(); 
+                handleCanvasInteraction(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
     }
 
     private triggerStartGame() {
