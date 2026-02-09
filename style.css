@@ -323,14 +323,15 @@ button[type="submit"]:hover {
   /* Area for controls */
   pointer-events: none;
   /* Let touches pass through open areas */
-  z-index: 200;
+  z-index: 1000;
+  /* Increased to ensure visibility above all except overlays */
   justify-content: space-between;
   padding: 0 40px;
   box-sizing: border-box;
 }
 
 /* Show controls only on touch devices */
-@media (hover: none) and (pointer: coarse) {
+@media (pointer: coarse) {
   #mobile-controls {
     display: flex;
   }
@@ -472,7 +473,7 @@ button[type="submit"]:hover {
 }
 
 /* Show only on mobile in portrait mode */
-@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+@media (orientation: portrait) and (pointer: coarse) {
   #landscape-warning {
     display: flex;
   }
