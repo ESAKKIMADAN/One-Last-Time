@@ -189,6 +189,12 @@ export class Game {
                     this.startDialogue();
                 });
             };
+            // Add click listener for mobile tap to skip
+            this.videoElement.addEventListener('click', () => {
+                if (this.toggleCooldown <= 0) {
+                    this.advanceState();
+                }
+            });
         }
 
         // Mouse Listener for UI Interactions (Retry Button)
@@ -293,6 +299,7 @@ export class Game {
                     this.startDialogue();
                 });
             }
+        } else if (this.gameState === GameState.DIALOGUE) {
             this.handleDialogueProgression();
         }
     }
