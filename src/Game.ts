@@ -1026,11 +1026,18 @@ export class Game {
 
 
             // Draw Speech Bubble
-            const bubbleX = 300;
+            // Default (Hero on Left)
+            let bubbleX = 300;
             const bubbleY = 100;
             const bubbleW = 400;
             const bubbleH = 150;
             const radius = 20;
+
+            // Adjust for Boss on Right (Level 5, Step 1)
+            if (this.currentLevel === 5 && this.dialogueStep === 1) {
+                // Boss is on Right, so Bubble goes Left
+                bubbleX = 50;
+            }
 
             this.ctx.fillStyle = '#FFFFFF';
             this.ctx.beginPath();
@@ -1039,9 +1046,21 @@ export class Game {
 
             // Triangle pointer for bubble
             this.ctx.beginPath();
-            this.ctx.moveTo(bubbleX, bubbleY + 100);
-            this.ctx.lineTo(bubbleX - 30, bubbleY + 120);
-            this.ctx.lineTo(bubbleX + 10, bubbleY + 120);
+
+            if (this.currentLevel === 5 && this.dialogueStep === 1) {
+                // Point Right (towards Boss)
+                // Start near bottom right of bubble
+                const pointerX = bubbleX + bubbleW - 40;
+                this.ctx.moveTo(pointerX, bubbleY + bubbleH);
+                this.ctx.lineTo(pointerX + 30, bubbleY + bubbleH + 20); // Down-Right
+                this.ctx.lineTo(pointerX - 10, bubbleY + bubbleH); // Back
+            } else {
+                // Point Left (towards Hero) - Default
+                this.ctx.moveTo(bubbleX, bubbleY + 100);
+                this.ctx.lineTo(bubbleX - 30, bubbleY + 120);
+                this.ctx.lineTo(bubbleX + 10, bubbleY + 120);
+            }
+
             this.ctx.fill();
 
 
