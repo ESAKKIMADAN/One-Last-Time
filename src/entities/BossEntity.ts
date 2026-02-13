@@ -1,10 +1,4 @@
 import { Enemy } from './Enemy';
-import bossIdleUrl from '../assets/boss/1-removebg-preview.png';
-import bossWalk1Url from '../assets/boss/2-removebg-preview.png';
-import bossWalk2Url from '../assets/boss/3-removebg-preview.png';
-import bossAttack1Url from '../assets/boss/4-removebg-preview.png';
-import bossAttack2Url from '../assets/boss/5-removebg-preview.png';
-
 import { AnimationState } from '../enums/AnimationState';
 
 export class Boss extends Enemy {
@@ -27,14 +21,14 @@ export class Boss extends Enemy {
 
         // Load Images
         this.idleImage = new Image();
-        this.idleImage.src = bossIdleUrl;
+        this.idleImage.src = 'assets/boss/1-removebg-preview.png';
 
-        const w1 = new Image(); w1.src = bossWalk1Url;
-        const w2 = new Image(); w2.src = bossWalk2Url;
+        const w1 = new Image(); w1.src = 'assets/boss/2-removebg-preview.png';
+        const w2 = new Image(); w2.src = 'assets/boss/3-removebg-preview.png';
         this.walkImages = [w1, w2];
 
-        const a1 = new Image(); a1.src = bossAttack1Url;
-        const a2 = new Image(); a2.src = bossAttack2Url;
+        const a1 = new Image(); a1.src = 'assets/boss/4-removebg-preview.png';
+        const a2 = new Image(); a2.src = 'assets/boss/5-removebg-preview.png';
         this.attackImages = [a1, a2];
     }
 

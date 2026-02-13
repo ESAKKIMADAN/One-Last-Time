@@ -1,22 +1,11 @@
-import { supabase } from './supabaseClient';
-import { InputHandler } from './InputHandler';
+import { supabase } from './services/supabaseClient';
+import { InputHandler } from './input/InputHandler';
 import { Player } from './entities/Player';
 import { Bullet } from './entities/Bullet';
 import { Enemy } from './entities/Enemy';
 import { Boss } from './entities/BossEntity';
 import { FloatingText } from './entities/FloatingText';
 import { HealthPickup } from './entities/HealthPickup';
-import bgMusicUrl from './assets/bg_music.mp3';
-import shootSoundUrl from './assets/sounds/Gun.mp3';
-import punchSoundUrl from './assets/sounds/Punch.mp3';
-import gameplayMusicUrl from './assets/sounds/gameplay_bgm.mp3';
-import level4DialogueUrl from './assets/sounds/level4_dialogue.mp3';
-import bossBgSkyUrl from './assets/boss_bg_sky.png';
-import leoDialogueUrl from './assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3';
-import bossAppearanceUrl from './assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3';
-import level5DialogueUrl from './assets/sounds/jd-to-bhavani-intreval-talking-scene_Qz3qP6uv.mp3';
-import level5HeroDialogueUrl from './assets/sounds/jd-to-bhavani-intreval-talking-scene_lhKnVFAo.mp3';
-import bossDialogueUrl from './assets/boss/1-removebg-preview.png';
 
 
 
@@ -50,15 +39,12 @@ export class Game {
     private bossAppearanceSound: HTMLAudioElement;
     private shootSound: HTMLAudioElement;
 
-
-
-
     private videoElement: HTMLVideoElement; // Intro Video
 
     private healthBar: HTMLImageElement; // Health Bar UI
 
     private input: InputHandler;
-    private player: Player;
+    public player: Player;
     private bullets: Bullet[] = [];
     private level5DialogueMusic: HTMLAudioElement;
     private level5HeroDialogueMusic: HTMLAudioElement;
@@ -75,9 +61,6 @@ export class Game {
     private boss: Boss | null = null;
     private powerUnlocked: boolean = false;
     private killCount: number = 0;
-
-
-
 
     // Fade Transition
     private fadeOpacity: number = 0;
@@ -96,7 +79,6 @@ export class Game {
         this.player = new Player(200, 100);
 
         // Load Background
-        // Load Background
         this.bgImage = new Image();
         this.bgImage.src = 'assets/warehouse_bg.png';
 
@@ -104,7 +86,7 @@ export class Game {
         this.titleBgImage.src = 'assets/title_bg.png';
 
         this.bossBgSkyImage = new Image();
-        this.bossBgSkyImage.src = bossBgSkyUrl;
+        this.bossBgSkyImage.src = 'assets/boss_bg_sky.png';
 
         // Load Health Bar Frame
         this.healthBar = new Image();
@@ -121,7 +103,7 @@ export class Game {
             this.bgMusic = bgMusicEl;
         } else {
             // Fallback (though index.html should have it)
-            this.bgMusic = new Audio(bgMusicUrl);
+            this.bgMusic = new Audio('assets/bg_music.mp3');
             document.body.appendChild(this.bgMusic);
         }
         this.bgMusic.loop = true;
@@ -133,38 +115,38 @@ export class Game {
         this.dialogueImage.src = 'assets/player/222.png';
 
         // Load SFX
-        this.shootSound = new Audio(shootSoundUrl);
+        this.shootSound = new Audio('assets/sounds/Gun.mp3');
         this.shootSound.volume = 0.25;
-        this.punchSound = new Audio(punchSoundUrl);
+        this.punchSound = new Audio('assets/sounds/Punch.mp3');
 
 
         // Load Gameplay Music
-        this.gameplayMusic = new Audio(gameplayMusicUrl);
+        this.gameplayMusic = new Audio('assets/sounds/gameplay_bgm.mp3');
         this.gameplayMusic.loop = true;
         this.gameplayMusic.volume = 0.25;
 
         // Load Level 4 Dialogue Music
-        this.level4DialogueMusic = new Audio(level4DialogueUrl);
+        this.level4DialogueMusic = new Audio('assets/sounds/level4_dialogue.mp3');
         this.level4DialogueMusic.loop = false;
 
         // Load Level 5 Dialogue Music (Boss)
-        this.level5DialogueMusic = new Audio(level5DialogueUrl);
+        this.level5DialogueMusic = new Audio('assets/sounds/jd-to-bhavani-intreval-talking-scene_Qz3qP6uv.mp3');
         this.level5DialogueMusic.loop = false;
 
         // Load Level 5 Hero Dialogue Music
-        this.level5HeroDialogueMusic = new Audio(level5HeroDialogueUrl);
+        this.level5HeroDialogueMusic = new Audio('assets/sounds/jd-to-bhavani-intreval-talking-scene_lhKnVFAo.mp3');
         this.level5HeroDialogueMusic.loop = false;
 
         // Load Boss Dialogue Image
         this.bossDialogueImage = new Image();
-        this.bossDialogueImage.src = bossDialogueUrl;
+        this.bossDialogueImage.src = 'assets/boss/1-removebg-preview.png';
 
         // Load Leo Dialogue Sound
-        this.leoDialogueSound = new Audio(leoDialogueUrl);
+        this.leoDialogueSound = new Audio('assets/sounds/Naan thaanda Leo, leo das   Leo   Thalapathy vijay, Sanjay Dutt.mp3');
         this.leoDialogueSound.loop = false;
 
         // Load Boss Appearance Sound
-        this.bossAppearanceSound = new Audio(bossAppearanceUrl);
+        this.bossAppearanceSound = new Audio('assets/sounds/the-iconic-climax-fight-vijay-thalapathy-vijay-sethupathi-master-prime-video-in_BeXI1Pu1.mp3');
         this.bossAppearanceSound.loop = false;
         this.bossAppearanceSound.volume = 0.5;
 

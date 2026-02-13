@@ -1,5 +1,5 @@
 import { Entity } from './Entity';
-import { InputHandler } from '../InputHandler';
+import { InputHandler } from '../input/InputHandler';
 import { AnimationState } from '../enums/AnimationState';
 
 export class Player extends Entity {
