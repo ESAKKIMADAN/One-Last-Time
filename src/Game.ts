@@ -202,7 +202,7 @@ export class Game {
 
                 // If Post-Boss Death (Level > 5), allow click anywhere
                 if (this.currentLevel > 5) {
-                    this.restartGame();
+                    this.returnToTitle();
                 }
             }
             // Tap to Start / Advance (For Mobile/Mouse)
@@ -819,6 +819,10 @@ export class Game {
         }
 
         if (this.gameState === GameState.GAME_OVER) {
+            // Allow Enter to return to title if Post-Boss
+            if (this.currentLevel > 5 && (this.input.isDown('Enter') || this.input.isDown('Space'))) {
+                this.returnToTitle();
+            }
             return; // Stop updating game logic
         }
 
