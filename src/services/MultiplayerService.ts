@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { RealtimeChannel } from '@supabase/supabase-js';
+// import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface PlayerState {
     id: string;
@@ -20,8 +20,8 @@ export interface GameStateUpdate {
 }
 
 export class MultiplayerService {
-    private channel: RealtimeChannel | null = null;
-    private roomId: string = '';
+    private channel: any = null;
+    // private roomId: string = '';
     private playerId: string = '';
     private onGameStateUpdate: ((state: GameStateUpdate) => void) | null = null;
     private onPlayerJoined: ((count: number) => void) | null = null;
@@ -36,7 +36,7 @@ export class MultiplayerService {
     }
 
     public async joinRoom(roomId: string, onUpdate: (state: GameStateUpdate) => void, onJoined: (count: number) => void): Promise<boolean> {
-        this.roomId = roomId;
+        // this.roomId = roomId;
         this.onGameStateUpdate = onUpdate;
         this.onPlayerJoined = onJoined;
 
@@ -71,7 +71,7 @@ export class MultiplayerService {
                     // But 'isHost' usually fixed on creation in better systems. 
                     // Here we'll rely on "First come" effectively.
                     // Actually, if we join and there's already someone, we are NOT host.
-                    const myIndex = userIds.indexOf(this.playerId);
+                    // const myIndex = userIds.indexOf(this.playerId); // Unused
                     // If I am index 0, I might be host, but presence sync order isn't guaranteed sorted by arrival time accurately always.
                     // Better: The one who sends 'START_GAME' is host. 
                 }
@@ -79,10 +79,10 @@ export class MultiplayerService {
                 // Identify Opponent
                 this.opponentId = userIds.find(id => id !== this.playerId) || null;
             })
-            .on('broadcast', { event: 'game_update' }, (payload) => {
+            .on('broadcast', { event: 'game_update' }, (payload: any) => {
                 if (this.onGameStateUpdate) this.onGameStateUpdate(payload.payload);
             })
-            .on('broadcast', { event: 'start_match' }, (payload) => {
+            .on('broadcast', { event: 'start_match' }, (payload: any) => {
                 // Receive character assignment
                 // payload: { config: { [playerId]: 'boss' | 'player' } }
                 const config = payload.payload;
@@ -92,7 +92,7 @@ export class MultiplayerService {
                     // Trigger game start callback in main updating logic
                 }
             })
-            .subscribe(async (status) => {
+            .subscribe(async (status: any) => {
                 if (status === 'SUBSCRIBED') {
                     await this.channel!.track({
                         online_at: new Date().toISOString(),
