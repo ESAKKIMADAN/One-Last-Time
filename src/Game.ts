@@ -996,8 +996,9 @@ export class Game {
                         // Boss is identifiable by type or class check. 
                         // Since Boss extends Enemy, we can check instanceof or just ensuring it's not the boss obj.
                         const isBoss = (enemy as any) === this.boss;
+                        const spawnRate = this.currentLevel > 5 ? 5 : 2;
 
-                        if (!isBoss && this.killCount % 2 === 0) {
+                        if (!isBoss && this.killCount % spawnRate === 0) {
                             this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
                         }
                     }
@@ -1059,7 +1060,8 @@ export class Game {
                     this.addFloatingText(enemy.x, enemy.y, "+50", '#ef4444');
 
                     this.killCount++;
-                    if (this.killCount % 2 === 0) {
+                    const spawnRate = this.currentLevel > 5 ? 5 : 2;
+                    if (this.killCount % spawnRate === 0) {
                         this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
                     }
                 }
