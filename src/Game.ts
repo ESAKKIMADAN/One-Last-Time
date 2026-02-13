@@ -704,7 +704,18 @@ export class Game {
 
         // Spawn enemies
         for (let i = 0; i < enemyCount; i++) {
-            const x = 500 + Math.random() * 800;
+            let x;
+            if (level > 5) {
+                // Infinite Mode: Spawn from both sides
+                const side = Math.random() < 0.5 ? 'left' : 'right';
+                if (side === 'left') {
+                    x = -100 - Math.random() * 200; // Left off-screen
+                } else {
+                    x = 800 + 100 + Math.random() * 200; // Right off-screen (assuming 800 map width)
+                }
+            } else {
+                x = 500 + Math.random() * 800;
+            }
             const y = 350; // Simplify Y for now or randomize if needed
             const type = (i % 2) + 1; // Alternate 1, 2, 1, 2...
             this.spawnEnemy(x, y, type);
@@ -996,7 +1007,7 @@ export class Game {
                         // Boss is identifiable by type or class check. 
                         // Since Boss extends Enemy, we can check instanceof or just ensuring it's not the boss obj.
                         const isBoss = (enemy as any) === this.boss;
-                        const spawnRate = this.currentLevel > 5 ? 5 : 2;
+                        const spawnRate = this.currentLevel > 5 ? 10 : 2;
 
                         if (!isBoss && this.killCount % spawnRate === 0) {
                             this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
@@ -1060,7 +1071,7 @@ export class Game {
                     this.addFloatingText(enemy.x, enemy.y, "+50", '#ef4444');
 
                     this.killCount++;
-                    const spawnRate = this.currentLevel > 5 ? 5 : 2;
+                    const spawnRate = this.currentLevel > 5 ? 10 : 2;
                     if (this.killCount % spawnRate === 0) {
                         this.healthPickups.push(new HealthPickup(enemy.x, enemy.y));
                     }
