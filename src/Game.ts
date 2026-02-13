@@ -710,10 +710,10 @@ export class Game {
             this.spawnEnemy(x, y, type);
         }
 
-        // Reset Background if Level > 5 (Infinite Mode)
+        // Reset Background if Level > 5 (Infinite Mode) - Keep Boss Sky
         if (level > 5) {
             this.bgImage = new Image();
-            this.bgImage.src = 'assets/warehouse_bg.png';
+            this.bgImage.src = 'assets/boss_bg_sky.png';
 
             // Resume Music if paused
             if (this.gameplayMusic.paused) {
@@ -1320,7 +1320,7 @@ export class Game {
         this.ctx.fillText(`SCORE: ${this.score}`, this.canvas.width - 20, 70);
 
         // Draw Power Unlock UI
-        if (this.powerUnlocked && !this.instructionDismissed) {
+        if (this.powerUnlocked && !this.instructionDismissed && this.currentLevel <= 5) {
             this.ctx.textAlign = 'center';
             this.ctx.fillStyle = '#3b82f6'; // Blue
             this.ctx.font = '16px "Press Start 2P"';
