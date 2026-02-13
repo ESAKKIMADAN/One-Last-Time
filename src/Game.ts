@@ -856,6 +856,12 @@ export class Game {
             if (this.currentLevel === 6) {
                 // Just defeated the boss
                 this.addFloatingText(this.player.x, this.player.y - 150, "BOSS DEFEATED!", '#3b82f6');
+
+                // Force switch to Alt Skin (111.png/Melee) if currently in Gun mode
+                if (!this.player.isAltSkinActive) {
+                    this.player.toggleCharacter();
+                }
+
                 setTimeout(() => {
                     this.addFloatingText(this.player.x, this.player.y - 120, "INFINITE MODE START", '#ef4444');
                 }, 1500);
