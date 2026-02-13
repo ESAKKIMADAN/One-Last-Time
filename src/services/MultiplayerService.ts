@@ -69,18 +69,11 @@ export class MultiplayerService {
                 if (this.onPlayerJoined) this.onPlayerJoined(userIds.length);
 
                 // Determine Host (first user/lowest ID logic or just first to appear)
-                // For simplicity: If I am the only one, I am Host.
-                if (userIds.length === 1) {
-                    this.isHost = true;
-                } else {
-                    // If multiple, strictly sort to decide ensuring stability
-                    // But 'isHost' usually fixed on creation in better systems. 
-                    // Here we'll rely on "First come" effectively.
-                    // Actually, if we join and there's already someone, we are NOT host.
-                    // const myIndex = userIds.indexOf(this.playerId); // Unused
-                    // If I am index 0, I might be host, but presence sync order isn't guaranteed sorted by arrival time accurately always.
-                    // Better: The one who sends 'START_GAME' is host. 
-                }
+                // Deterministic Host Logic: Lowest ID is Host
+                // This prevents race conditions where both think they are host
+                const sortedIds = [...userIds].sort();
+                this.isHost = sortedIds[0] === this.playerId;
+                console.log(`Am I Host? ${this.isHost} (Lowest ID: ${sortedIds[0]})`);
 
                 // Identify Opponent - Already done above
             })

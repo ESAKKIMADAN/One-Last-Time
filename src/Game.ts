@@ -1556,6 +1556,10 @@ export class Game {
         // Host determines roles
         if (this.multiplayer.isHost) {
             const opponentId = this.multiplayer.opponentId;
+            if (!opponentId) {
+                console.error("Opponent ID missing, cannot start match");
+                return;
+            }
             const myId = this.multiplayer.getPlayerId();
 
             // Random assignment
@@ -1585,6 +1589,7 @@ export class Game {
         // Reset Entitites
         this.bullets = []; // Clear bullets
         this.enemies = []; // Clear AI enemies
+        this.remotePlayer = null; // Clear remote player
 
         // Setup Local Player
         // Always use Player class for control, but change appearance if Boss
