@@ -1593,14 +1593,20 @@ export class Game {
 
         // Setup Local Player
         // Always use Player class for control, but change appearance if Boss
-        this.player = new Player(100, 360);
-
         if (role === 'player') {
+            // Player Role: Spawn Left, Face Right
+            this.player = new Player(100, 360);
+            this.player.facing = 1;
+
             // Ensure correct skin - Use default skin for 'player' role (Story Mode style)
             if (this.player.isAltSkinActive) this.player.toggleCharacter();
         } else {
-            // Boss Role
+            // Boss Role: Spawn Right, Face Left
+            // Assuming canvas width is approx 1024 or 800. calculated from canvas.
+            const spawnX = this.canvas.width - 200;
+            this.player = new Player(spawnX, 360);
             this.player.setBossMode();
+            this.player.facing = -1;
         }
     }
 
