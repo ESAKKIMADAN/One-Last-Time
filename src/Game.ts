@@ -171,12 +171,8 @@ export class Game {
                     this.startDialogue();
                 });
             };
-            // Add click listener for mobile tap to skip
-            this.videoElement.addEventListener('click', () => {
-                if (this.toggleCooldown <= 0) {
-                    this.advanceState();
-                }
-            });
+            // REMOVED click listener for mobile tap to skip to prevent accidental skipping
+            // The user requested: "vdo need to not skip"
         }
 
         // Unified Listener for UI Interactions (Retry Button, Start Screen, etc.)
@@ -207,11 +203,16 @@ export class Game {
             }
             // Tap to Start / Advance (For Mobile/Mouse)
             else if (this.gameState === GameState.START_SCREEN) {
+                // Force Fullscreen on interaction if mobile
+                if (this.isMobile()) {
+                    this.toggleFullscreen();
+                }
+
                 if (this.toggleCooldown <= 0) {
                     this.triggerStartGame();
                 }
             }
-            else if (this.gameState === GameState.DIALOGUE || this.gameState === GameState.VIDEO_INTRO) {
+            else if (this.gameState === GameState.DIALOGUE) { // Removed VIDEO_INTRO from here to prevent skipping
                 if (this.toggleCooldown <= 0) {
                     this.advanceState();
                 }
@@ -251,8 +252,8 @@ export class Game {
         if (trophyBtn) trophyBtn.style.display = 'none';
         if (fullscreenBtn) fullscreenBtn.style.display = 'none';
 
-        // Auto Fullscreen for Android
-        if (this.isAndroid()) {
+        // Auto Fullscreen for Mobile
+        if (this.isMobile()) {
             this.toggleFullscreen();
         }
 
@@ -288,8 +289,8 @@ export class Game {
         }
     }
 
-    private isAndroid(): boolean {
-        return /Android/i.test(navigator.userAgent);
+    private isMobile(): boolean {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     private advanceState() {
