@@ -35,10 +35,13 @@ export class MultiplayerService {
         this.playerId = Math.random().toString(36).substring(2, 9);
     }
 
-    public async joinRoom(roomId: string, onUpdate: (state: GameStateUpdate) => void, onJoined: (count: number) => void): Promise<boolean> {
+    private onGameStart: ((role: 'player' | 'boss') => void) | null = null;
+
+    public async joinRoom(roomId: string, onUpdate: (state: GameStateUpdate) => void, onJoined: (count: number) => void, onStart: (role: 'player' | 'boss') => void): Promise<boolean> {
         // this.roomId = roomId;
         this.onGameStateUpdate = onUpdate;
         this.onPlayerJoined = onJoined;
+        this.onGameStart = onStart;
 
         // Cleanup existing
         if (this.channel) await this.leaveRoom();
@@ -89,7 +92,10 @@ export class MultiplayerService {
                 if (config && config[this.playerId]) {
                     this.myCharacter = config[this.playerId];
                     console.log("Assigned Character:", this.myCharacter);
-                    // Trigger game start callback in main updating logic
+
+                    if (this.onGameStart) {
+                        this.onGameStart(this.myCharacter);
+                    }
                 }
             })
             .subscribe(async (status: any) => {

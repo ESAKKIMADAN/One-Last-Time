@@ -653,6 +653,10 @@ export class Game {
                             // Start Game Logic
                             this.startMultiplayerMatch();
                         }
+                    },
+                    (role) => {
+                        console.log("Game Starting! Role:", role);
+                        this.initializeMultiplayerRound(role);
                     }
                 );
                 lobbyStatus.innerText = `Room Created: ${code}. Waiting for player...`;
@@ -674,6 +678,10 @@ export class Game {
                         if (count >= 2) {
                             lobbyStatus.innerText = "Player Found! Starting...";
                         }
+                    },
+                    (role) => {
+                        console.log("Game Starting! Role:", role);
+                        this.initializeMultiplayerRound(role);
                     }
                 );
             });
