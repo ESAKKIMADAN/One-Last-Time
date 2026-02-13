@@ -79,7 +79,7 @@ export class Game {
     // Multiplayer
     private multiplayer: MultiplayerService;
     private isMultiplayer: boolean = false;
-    private remotePlayer: Player | Boss | null = null;
+    private remotePlayer: Player | null = null;
     private mpRound: number = 1;
     private mpWins: number = 0;
     // private mpOpponentWins: number = 0;
@@ -1625,34 +1625,30 @@ export class Game {
 
             const pState = state.players[id];
 
-            // Initialize Remote Player if needed
+            // Initialize Remote Player if needed - Always use Player class for unification
             if (!this.remotePlayer) {
-                if (pState.characterType === 'boss') {
-                    this.remotePlayer = new Boss(pState.x, pState.y);
-                } else {
-                    this.remotePlayer = new Player(pState.x, pState.y);
-                    const rp = this.remotePlayer as Player;
-                    if (!rp.isAltSkinActive) rp.toggleCharacter();
+                this.remotePlayer = new Player(pState.x, pState.y);
+            }
+
+            // Sync Skin
+            const rp = this.remotePlayer as Player;
+            if (pState.characterType === 'boss') {
+                if (!rp.isBossSkin) rp.setBossMode();
+            } else {
+                if (rp.isBossSkin) rp.toggleCharacter();
+                // Basic Player skin logic: Story mode uses default, some others use 111.png
+                if (rp.isAltSkinActive) {
+                    // If it's the 111.png skin, stay there. 
+                    // The local character initialization handles 'player' vs 'boss'
                 }
             }
 
             // Sync Properties
-            // Smooth lerp could go here, but direct assignment for now
             this.remotePlayer.x = pState.x;
             this.remotePlayer.y = pState.y;
-            // direction fix
-            if (this.remotePlayer instanceof Player) {
-                this.remotePlayer.facing = pState.facing;
-            } else if (this.remotePlayer instanceof Boss) {
-                this.remotePlayer.direction = pState.facing;
-            }
+            this.remotePlayer.facing = pState.facing;
             this.remotePlayer.state = pState.animState as any;
-
-            if (this.remotePlayer instanceof Player) {
-                this.remotePlayer.health = pState.hp;
-            } else if (this.remotePlayer instanceof Boss) {
-                this.remotePlayer.health = pState.hp;
-            }
+            this.remotePlayer.health = pState.hp;
         });
     }
 
@@ -1660,7 +1656,8 @@ export class Game {
         if (!this.player) return;
 
         // 1. Update Local Player (Movement/Input)
-        this.player.update(deltaTime, this.input, this.cameraX);
+        // Fix: Pass canvas width for 1v1 mode boundaries instead of cameraX
+        this.player.update(deltaTime, this.input, this.canvas.width);
 
         // 2. Broadcast State
         const myState: PlayerState = {

@@ -68,7 +68,15 @@ export class Player extends Entity {
         return this.isAltSkin;
     }
 
-    private isBossSkin: boolean = false;
+    public get isBossSkinActive(): boolean {
+        return this.isBossSkin;
+    }
+
+    public get isBossSkin(): boolean {
+        return this._isBossSkin;
+    }
+
+    private _isBossSkin: boolean = false;
 
     constructor(x: number, y: number) {
         super(x, y, 77, 173); // Increased size: 77x173 (1.2x of 64x144)
@@ -102,7 +110,7 @@ export class Player extends Entity {
 
     public toggleCharacter() {
         this.isAltSkin = !this.isAltSkin;
-        this.isBossSkin = false;
+        this._isBossSkin = false;
         this.animationMap = this.isAltSkin ? this.altAnimationMap : this.defaultAnimationMap;
 
         // Reset to Idle
@@ -111,7 +119,7 @@ export class Player extends Entity {
     }
 
     public setBossMode() {
-        this.isBossSkin = true;
+        this._isBossSkin = true;
         this.isAltSkin = false;
         this.animationMap = this.bossAnimationMap;
 
