@@ -17,9 +17,10 @@ enum GameState {
     DIALOGUE,
     PLAYING,
     GAME_OVER,
-    LOBBY,
-    MULTIPLAYER_MATCH,
-    ROUND_OVER
+    // LOBBY,
+    MULTIPLAYER_MATCH = 'MULTIPLAYER_MATCH',
+    MULTIPLAYER_END = 'MULTIPLAYER_END'
+    // ROUND_OVER
 }
 
 export class Game {
@@ -847,7 +848,7 @@ export class Game {
 
     private update(deltaTime: number, now: number) {
         // Handle Fade Transition
-        if (this.gameState === GameState.MULTIPLAYER_MATCH) {
+        if (this.gameState === GameState.MULTIPLAYER_MATCH || this.gameState === GameState.MULTIPLAYER_END) {
             this.updateMultiplayer(deltaTime);
             return;
         }
@@ -1212,7 +1213,7 @@ export class Game {
             this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
         }
 
-        if (this.gameState === GameState.MULTIPLAYER_MATCH) {
+        if (this.gameState === GameState.MULTIPLAYER_MATCH || this.gameState === GameState.MULTIPLAYER_END) {
             this.drawMultiplayer();
             return;
         }
@@ -1680,34 +1681,83 @@ export class Game {
 
         // 3. Collision / Damage Check
         if (this.remotePlayer) {
-            // Simple: Check intersection. 
-            // In a real fighter, we check Hitbox vs Hurtbox.
-            // Here: Box vs Box.
-            const colliding = this.checkCollision(this.player, this.remotePlayer);
+            // Check if remote is attacking
+            const remoteAttacking = (this.remotePlayer as Player).state === AnimationState.SHOOT;
+            const remoteFacing = (this.remotePlayer as Player).facing;
 
-            // If remote is attacking AND colliding => I take damage
-            // We need 'isAttacking' from remote state.
-            // We didn't store it in `remotePlayer`.
-            // Let's assume if state === 2 (SHOOT/ATTACK), they are attacking.
-            const remoteAttacking = this.remotePlayer.state === AnimationState.SHOOT;
+            if (remoteAttacking && !this.player.invulnerable) {
+                // Define remote attack range
+                const range = 60;
+                const attackBox = {
+                    x: remoteFacing === 1 ? this.remotePlayer.x + this.remotePlayer.width : this.remotePlayer.x - range,
+                    y: this.remotePlayer.y,
+                    width: range,
+                    height: this.remotePlayer.height
+                };
 
-            if (colliding && remoteAttacking && !this.player.invulnerable) {
-                this.player.takeDamage(1); // 1 damage per frame? Too fast.
-                // Player has invulnerability frames built-in takeDamage.
+                if (this.checkCollision(this.player, attackBox)) {
+                    this.player.takeDamage(10); // Take 10 damage per hit
+                    // Note: player.takeDamage adds invulnerability frames
+                }
+            }
+
+            // Local Attack 
+            if (this.player.state === AnimationState.SHOOT) {
+                // Visual feedback only for now as HP is authoritative from remote
             }
         }
 
-        // Win/Loss
-        if (this.player.health <= 0) {
-            // I died.
-            // Reset? Or show Dead.
+        // Win/Loss Check
+        if (this.player.health <= 0 && this.gameState === GameState.MULTIPLAYER_MATCH) {
+            // I lost the round
+            // We broadcast HP 0, the other player will detect it.
+            this.handlePlayerDefeat();
         }
+
+        if (this.remotePlayer && this.remotePlayer.health <= 0 && this.gameState === GameState.MULTIPLAYER_MATCH) {
+            // I won the round
+            this.mpWins++;
+            this.handleRoundVictory();
+        }
+    }
+
+    private handlePlayerDefeat() {
+        // Show "LOSER" text and reset after delay
+        this.gameState = GameState.MULTIPLAYER_END;
+        setTimeout(() => this.resetMultiplayerRound(), 3000);
+    }
+
+    private handleRoundVictory() {
+        // Show "WINNER" text and reset after delay
+        this.gameState = GameState.MULTIPLAYER_END;
+        setTimeout(() => this.resetMultiplayerRound(), 3000);
+    }
+
+    private resetMultiplayerRound() {
+        this.mpRound++;
+        // Re-init positions
+        const role = (this.player as Player).isBossSkin ? 'boss' : 'player';
+        this.initializeMultiplayerRound(role);
     }
 
     private drawMultiplayer() {
         // Draw Background
         if (this.bossBgSkyImage.complete) {
             this.ctx.drawImage(this.bossBgSkyImage, 0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        // Win/Loss Text
+        if (this.gameState === GameState.MULTIPLAYER_END) {
+            this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = '40px "Press Start 2P"';
+            this.ctx.textAlign = 'center';
+            if (this.player.health <= 0) {
+                this.ctx.fillText("ROUND LOST", this.canvas.width / 2, this.canvas.height / 2);
+            } else {
+                this.ctx.fillText("ROUND WON", this.canvas.width / 2, this.canvas.height / 2);
+            }
         }
 
         // Draw Remote Player
@@ -1725,6 +1775,40 @@ export class Game {
         this.ctx.font = '20px "Press Start 2P"';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
+
+        // --- Split Health Bars ---
+        const barWidth = 300;
+        const barHeight = 30;
+        const topMargin = 70;
+
+        // Player 1 (LOCAL) - Left
+        const p1X = 50;
+        this.drawHealthBarHUD(p1X, topMargin, barWidth, barHeight, this.player.health, this.player.maxHealth, "YOU");
+
+        // Player 2 (REMOTE) - Right
+        if (this.remotePlayer) {
+            const p2X = this.canvas.width - barWidth - 50;
+            const rp = this.remotePlayer as Player;
+            this.drawHealthBarHUD(p2X, topMargin, barWidth, barHeight, rp.health, rp.maxHealth, "OPPONENT");
+        }
+    }
+
+    private drawHealthBarHUD(x: number, y: number, w: number, h: number, health: number, max: number, label: string) {
+        // Label
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '12px "Press Start 2P"';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(label, x, y - 10);
+
+        // Frame
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x, y, w, h);
+
+        // Fill
+        const pct = Math.max(0, health / max);
+        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444'; // Green or Red
+        this.ctx.fillRect(x + 2, y + 2, (w - 4) * pct, h - 4);
     }
 
     private checkCollision(a: any, b: any): boolean {
