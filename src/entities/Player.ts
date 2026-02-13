@@ -232,26 +232,27 @@ export class Player extends Entity {
         const drawX = Math.floor(this.x);
         const drawY = Math.floor(this.y);
 
-        // Base dimensions
-        let w = img.naturalWidth || 128;
-        let h = img.naturalHeight || 144;
+        // Standardize Rendering Size
+        // We use a target height based on the hitbox height (173) 
+        // and add some padding for visual flourish, then apply global scaling.
+        const naturalW = img.naturalWidth || 64;
+        const naturalH = img.naturalHeight || 144;
+        const aspectRatio = naturalW / naturalH;
+
+        // Base visual height (standardized)
+        let visualHeight = 180;
 
         if (this.isAltSkin) {
-            // "Same height as another" -> Target standard height (approx 128)
-            const targetHeight = 143; // 119 * 1.2
-            const naturalW = img.naturalWidth || 69;
-            const naturalH = img.naturalHeight || 116;
-            const aspectRatio = naturalW / naturalH;
-
-            h = targetHeight;
-            w = h * aspectRatio;
-        } else {
-            h = (img.naturalHeight || 144) + 5;
+            visualHeight = 165; // Alt skin is slightly shorter visually
+        } else if (this.isBossSkin) {
+            visualHeight = 185; // Boss skin slightly taller
         }
 
-        // Apply Scaling to match new hitbox size
-        // Reverting to 1.5 as 1.6 might be too big/issues.
-        const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.5 : 1.5);
+        let h = visualHeight;
+        let w = h * aspectRatio;
+
+        // Apply Scaling (Global multiplayer balance)
+        const scale = 1.5;
         w *= scale;
         h *= scale;
 

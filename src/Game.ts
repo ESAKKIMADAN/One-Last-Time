@@ -1668,7 +1668,7 @@ export class Game {
             animState: this.player.state as unknown as number,
             hp: this.player.health,
             isAttacking: this.player.state === AnimationState.SHOOT,
-            characterType: (this.player instanceof Player) ? 'player' : 'boss',
+            characterType: (this.player as Player).isBossSkin ? 'boss' : 'player',
             roundWins: this.mpWins
         };
 
