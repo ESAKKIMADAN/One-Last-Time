@@ -242,8 +242,8 @@ export class Player extends Entity {
         }
 
         // Apply Scaling to match new hitbox size
-        // Boss at 1.0 was too small compared to Player 1.5. Bump Boss to 1.5 or 1.6.
-        const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.6 : 1.5);
+        // Reverting to 1.5 as 1.6 might be too big/issues.
+        const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.5 : 1.5);
         w *= scale;
         h *= scale;
 

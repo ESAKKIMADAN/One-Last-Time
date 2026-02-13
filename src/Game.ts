@@ -1602,9 +1602,9 @@ export class Game {
             if (this.player.isAltSkinActive) this.player.toggleCharacter();
         } else {
             // Boss Role: Spawn Right, Face Left
-            // Assuming canvas width is approx 1024 or 800. calculated from canvas.
-            const spawnX = this.canvas.width - 200;
-            this.player = new Player(spawnX, 360);
+            // Use safe standard width (800) reference if canvas is huge/unset
+            // or just a fixed logical coordinate guaranteed to be in view.
+            this.player = new Player(600, 360);
             this.player.setBossMode();
             this.player.facing = -1;
         }
