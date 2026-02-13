@@ -75,6 +75,25 @@
               Sign in with Google
             </button>
           </div>
+
+          <div id="main-menu" style="display: none; flex-direction: column; gap: 20px;">
+            <button id="btn-story" class="menu-btn">STORY MODE</button>
+            <button id="btn-1v1" class="menu-btn">1v1 FIGHT</button>
+          </div>
+
+          <div id="lobby-ui"
+            style="display: none; flex-direction: column; gap: 15px; background: #2d2d2d; padding: 20px; border: 4px solid #fff; align-items: center;">
+            <h3 style="color: #fff; margin: 0 0 10px 0; font-size: 14px;">1v1 LOBBY</h3>
+            <input type="text" id="room-code-input" placeholder="ROOM CODE" maxlength="6"
+              style="text-align: center; letter-spacing: 2px;">
+            <div style="display: flex; gap: 10px; width: 100%;">
+              <button id="btn-create-room" class="menu-btn small" style="flex: 1; font-size: 10px;">CREATE</button>
+              <button id="btn-join-room" class="menu-btn small" style="flex: 1; font-size: 10px;">JOIN</button>
+            </div>
+            <p id="lobby-status" style="color: #aaa; font-size: 10px; margin: 5px 0; text-align: center;">Enter code to
+              join or create new.</p>
+            <button id="btn-back-menu" class="secondary-btn">BACK</button>
+          </div>
         </div>
       </div>
     </div>

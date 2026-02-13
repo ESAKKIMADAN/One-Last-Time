@@ -514,3 +514,51 @@ button[type="submit"]:hover {
     display: flex;
   }
 }
+
+/* Menu Buttons */
+.menu-btn {
+  background: #2d2d2d;
+  border: 4px solid #fff;
+  color: #fff;
+  padding: 15px 30px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.1s, background 0.1s;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+}
+
+.menu-btn:hover {
+  background: #444;
+  transform: translateY(-2px);
+}
+
+.menu-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.menu-btn.small {
+  padding: 10px;
+  font-size: 12px;
+  border-width: 2px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.google-btn {
+  background: #fff;
+  color: #444;
+  border: none;
+  padding: 10px 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.google-btn:hover {
+  background: #eee;
+}

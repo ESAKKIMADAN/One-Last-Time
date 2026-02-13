@@ -1,4 +1,6 @@
-import { supabase } from './services/supabaseClient';
+﻿import { supabase } from './services/supabaseClient';
+import { AnimationState } from './enums/AnimationState';
+import { MultiplayerService, GameStateUpdate, PlayerState } from './services/MultiplayerService';
 import { InputHandler } from './input/InputHandler';
 import { Player } from './entities/Player';
 import { Bullet } from './entities/Bullet';
@@ -14,7 +16,10 @@ enum GameState {
     VIDEO_INTRO,
     DIALOGUE,
     PLAYING,
-    GAME_OVER
+    GAME_OVER,
+    LOBBY,
+    MULTIPLAYER_MATCH,
+    ROUND_OVER
 }
 
 export class Game {
@@ -71,11 +76,20 @@ export class Game {
     private instructionDismissed: boolean = false;
     private toggleCooldown: number = 0; // Cooldown for UI interactions and transitions
 
+    // Multiplayer
+    private multiplayer: MultiplayerService;
+    private isMultiplayer: boolean = false;
+    private remotePlayer: Player | Boss | null = null;
+    private mpRound: number = 1;
+    private mpWins: number = 0;
+    // private mpOpponentWins: number = 0;
+
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
         this.ctx = ctx;
 
         this.input = new InputHandler();
+        this.multiplayer = new MultiplayerService();
         this.player = new Player(200, 100);
 
         // Load Background
@@ -208,9 +222,7 @@ export class Game {
                     this.toggleFullscreen();
                 }
 
-                if (this.toggleCooldown <= 0) {
-                    this.triggerStartGame();
-                }
+                // REMOVED auto-start on tap. Now handled by Main Menu buttons.
             }
             else if (this.gameState === GameState.DIALOGUE) { // Removed VIDEO_INTRO from here to prevent skipping
                 if (this.toggleCooldown <= 0) {
@@ -509,8 +521,9 @@ export class Game {
         if (data.session) {
             console.log("Session restored:", data.session.user);
             // Hide UI
-            const uiLayer = document.getElementById('ui-layer');
-            if (uiLayer) uiLayer.style.display = 'none';
+            // Hide UI initially? No, we need it for the menu.
+            // const uiLayer = document.getElementById('ui-layer');
+            // if (uiLayer) uiLayer.style.display = 'none';
 
             // Initial State: START_SCREEN (Title Page) - Wait for User Input
             this.gameState = GameState.START_SCREEN;
@@ -522,9 +535,14 @@ export class Game {
             const btnLogout = document.getElementById('btn-logout');
             if (btnLogout) btnLogout.style.display = 'block';
 
-            // Music already handled by tryPlayBgMusic or continues playing
-            // Re-attempt play just in case logic missed it
+            // Start Music
             this.tryPlayBgMusic();
+
+            // Show Main Menu, Hide Auth
+            const mainMenu = document.getElementById('main-menu');
+            const authContainer = document.getElementById('auth-container');
+            if (mainMenu) mainMenu.style.display = 'flex';
+            if (authContainer) authContainer.style.display = 'none';
         }
     }
 
@@ -583,6 +601,81 @@ export class Game {
                 if (this.gameState === GameState.START_SCREEN) {
                     authContainer.style.display = 'flex';
                 }
+            });
+        }
+
+        // Main Menu & Multiplayer UI Handlers
+        const btnStory = document.getElementById('btn-story');
+        const btn1v1 = document.getElementById('btn-1v1');
+        const mainMenu = document.getElementById('main-menu');
+        const lobbyUI = document.getElementById('lobby-ui');
+        const btnCreateRoom = document.getElementById('btn-create-room');
+        const btnJoinRoom = document.getElementById('btn-join-room');
+        const roomCodeInput = document.getElementById('room-code-input') as HTMLInputElement;
+        const btnBackMenu = document.getElementById('btn-back-menu');
+        const lobbyStatus = document.getElementById('lobby-status');
+
+        if (btnStory) {
+            btnStory.addEventListener('click', () => {
+                const mainMenu = document.getElementById('main-menu');
+                if (mainMenu) mainMenu.style.display = 'none';
+                this.triggerStartGame();
+            });
+        }
+
+        if (btn1v1 && mainMenu && lobbyUI) {
+            btn1v1.addEventListener('click', () => {
+                mainMenu.style.display = 'none';
+                lobbyUI.style.display = 'flex';
+            });
+        }
+
+        if (btnBackMenu && mainMenu && lobbyUI) {
+            btnBackMenu.addEventListener('click', () => {
+                lobbyUI.style.display = 'none';
+                mainMenu.style.display = 'flex';
+                this.multiplayer.leaveRoom();
+                if (lobbyStatus) lobbyStatus.innerText = "Enter code to join or create new.";
+            });
+        }
+
+        if (btnCreateRoom && lobbyStatus) {
+            btnCreateRoom.addEventListener('click', async () => {
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                if (roomCodeInput) roomCodeInput.value = code;
+                lobbyStatus.innerText = "Creating room...";
+
+                await this.multiplayer.joinRoom(code,
+                    (state) => this.handleRemoteUpdate(state),
+                    (count) => {
+                        lobbyStatus.innerText = `Room: ${code} | Players: ${count}`;
+                        if (count >= 2 && this.multiplayer.isHost) {
+                            // Start Game Logic
+                            this.startMultiplayerMatch();
+                        }
+                    }
+                );
+                lobbyStatus.innerText = `Room Created: ${code}. Waiting for player...`;
+            });
+        }
+
+        if (btnJoinRoom && roomCodeInput && lobbyStatus) {
+            btnJoinRoom.addEventListener('click', async () => {
+                const code = roomCodeInput.value;
+                if (code.length !== 6) {
+                    lobbyStatus.innerText = "Invalid Code (Must be 6 digits)";
+                    return;
+                }
+                lobbyStatus.innerText = "Joining...";
+                await this.multiplayer.joinRoom(code,
+                    (state) => this.handleRemoteUpdate(state),
+                    (count) => {
+                        lobbyStatus.innerText = `Room: ${code} | Players: ${count}`;
+                        if (count >= 2) {
+                            lobbyStatus.innerText = "Player Found! Starting...";
+                        }
+                    }
+                );
             });
         }
 
@@ -746,6 +839,11 @@ export class Game {
 
     private update(deltaTime: number, now: number) {
         // Handle Fade Transition
+        if (this.gameState === GameState.MULTIPLAYER_MATCH) {
+            this.updateMultiplayer(deltaTime);
+            return;
+        }
+
         if (this.fadeState === 'FADE_OUT') {
             this.fadeOpacity += deltaTime / 1000; // 1 second fade
 
@@ -1106,6 +1204,11 @@ export class Game {
             this.ctx.drawImage(this.bgImage, 0, 0, this.canvas.width, this.canvas.height);
         }
 
+        if (this.gameState === GameState.MULTIPLAYER_MATCH) {
+            this.drawMultiplayer();
+            return;
+        }
+
         if (this.gameState === GameState.START_SCREEN) {
             // Draw Title Background
             if (this.titleBgImage.complete && this.titleBgImage.naturalWidth > 0) {
@@ -1127,16 +1230,13 @@ export class Game {
             this.ctx.strokeText("ONE LAST TIME", 40, this.canvas.height / 2 - 20);
             this.ctx.fillText("ONE LAST TIME", 40, this.canvas.height / 2 - 20);
 
-            // Blinking Start Text
+            // Blinking Start Text logic removed
+            /*
             const now = Date.now();
             if (Math.floor(now / 500) % 2 === 0) {
-                this.ctx.font = '20px "Press Start 2P"';
-                this.ctx.lineWidth = 3;
-                const isMobile = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
-                const startText = isMobile ? "TAP TO START" : "PRESS ENTER TO START";
-                this.ctx.strokeText(startText, 40, this.canvas.height / 2 + 40);
-                this.ctx.fillText(startText, 40, this.canvas.height / 2 + 40);
+                 // Text removed
             }
+            */
 
             return;
         }
@@ -1340,7 +1440,7 @@ export class Game {
         this.ctx.fillText(`SCORE: ${this.score}`, this.canvas.width - 20, 70);
 
         // Draw Power Unlock UI
-        if (this.powerUnlocked && !this.instructionDismissed && this.currentLevel <= 5) {
+        if (this.powerUnlocked && !this.instructionDismissed && this.currentLevel <= 5 && this.bgImage !== this.bossBgSkyImage) {
             this.ctx.textAlign = 'center';
             this.ctx.fillStyle = '#3b82f6'; // Blue
             this.ctx.font = '16px "Press Start 2P"';
@@ -1429,15 +1529,195 @@ export class Game {
 
             // Draw Frame on Top
             this.ctx.drawImage(this.healthBar, barX, barY, w, h);
+
+            // Draw Fade Overlay
+            if (this.fadeOpacity > 0) {
+                this.ctx.globalAlpha = this.fadeOpacity;
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.globalAlpha = 1.0; // Reset alpha
+            }
         }
 
-        // Draw Fade Overlay
-        if (this.fadeOpacity > 0) {
-            this.ctx.globalAlpha = this.fadeOpacity;
-            this.ctx.fillStyle = '#000000';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.globalAlpha = 1.0; // Reset alpha
+    }
+
+
+    // --- Multiplayer Logic ---
+
+    private startMultiplayerMatch() {
+        // Host determines roles
+        if (this.multiplayer.isHost) {
+            const opponentId = this.multiplayer.opponentId;
+            const myId = this.multiplayer.getPlayerId();
+
+            // Random assignment
+            const myRole = Math.random() < 0.5 ? 'player' : 'boss';
+            const oppRole = myRole === 'player' ? 'boss' : 'player';
+
+            const config = {
+                [myId]: myRole,
+                [opponentId!]: oppRole
+            };
+
+            this.multiplayer.startGame(config);
+
+            // Local Start
+            this.initializeMultiplayerRound(myRole);
         }
+    }
+
+    private initializeMultiplayerRound(role: 'player' | 'boss') {
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'none';
+
+        this.isMultiplayer = true;
+        this.gameState = GameState.MULTIPLAYER_MATCH;
+        this.currentLevel = 99; // Special Level ID
+
+        // Reset Entitites
+        this.bullets = []; // Clear bullets
+        this.enemies = []; // Clear AI enemies
+
+        // Setup Local Player
+        // Always use Player class for control, but change appearance if Boss
+        this.player = new Player(200, 360);
+
+        if (role === 'player') {
+            // Ensure correct skin - 111.png is Alt Skin
+            if (!this.player.isAltSkinActive) this.player.toggleCharacter();
+        } else {
+            // Boss Role
+            this.player.setBossMode();
+        }
+    }
+
+    private handleRemoteUpdate(state: GameStateUpdate) {
+        if (!this.isMultiplayer) return;
+
+        // Sync Round Info
+        if (state.round > this.mpRound) {
+            this.mpRound = state.round;
+        }
+
+        const myId = this.multiplayer.getPlayerId();
+
+        Object.keys(state.players).forEach(id => {
+            if (id === myId) return;
+
+            const pState = state.players[id];
+
+            // Initialize Remote Player if needed
+            if (!this.remotePlayer) {
+                if (pState.characterType === 'boss') {
+                    this.remotePlayer = new Boss(pState.x, pState.y);
+                } else {
+                    this.remotePlayer = new Player(pState.x, pState.y);
+                    const rp = this.remotePlayer as Player;
+                    if (!rp.isAltSkinActive) rp.toggleCharacter();
+                }
+            }
+
+            // Sync Properties
+            // Smooth lerp could go here, but direct assignment for now
+            this.remotePlayer.x = pState.x;
+            this.remotePlayer.y = pState.y;
+            // direction fix
+            if (this.remotePlayer instanceof Player) {
+                this.remotePlayer.facing = pState.facing;
+            } else if (this.remotePlayer instanceof Boss) {
+                this.remotePlayer.direction = pState.facing;
+            }
+            this.remotePlayer.state = pState.animState as any;
+
+            if (this.remotePlayer instanceof Player) {
+                this.remotePlayer.health = pState.hp;
+            } else if (this.remotePlayer instanceof Boss) {
+                this.remotePlayer.health = pState.hp;
+            }
+        });
+    }
+
+    private updateMultiplayer(deltaTime: number) {
+        if (!this.player) return;
+
+        // 1. Update Local Player (Movement/Input)
+        this.player.update(deltaTime, this.input, this.cameraX);
+
+        // 2. Broadcast State
+        const myState: PlayerState = {
+            id: this.multiplayer.getPlayerId(),
+            x: this.player.x,
+            y: this.player.y,
+            facing: this.player.facing,
+            animState: this.player.state as unknown as number,
+            hp: this.player.health,
+            isAttacking: this.player.state === AnimationState.SHOOT,
+            characterType: (this.player instanceof Player) ? 'player' : 'boss',
+            roundWins: this.mpWins
+        };
+
+        this.multiplayer.sendUpdate({
+            players: { [myState.id]: myState },
+            round: this.mpRound,
+            roundActive: true
+        });
+
+        // 3. Collision / Damage Check
+        if (this.remotePlayer) {
+            // Simple: Check intersection. 
+            // In a real fighter, we check Hitbox vs Hurtbox.
+            // Here: Box vs Box.
+            const colliding = this.checkCollision(this.player, this.remotePlayer);
+
+            // If remote is attacking AND colliding => I take damage
+            // We need 'isAttacking' from remote state.
+            // We didn't store it in `remotePlayer`.
+            // Let's assume if state === 2 (SHOOT/ATTACK), they are attacking.
+            const remoteAttacking = this.remotePlayer.state === AnimationState.SHOOT;
+
+            if (colliding && remoteAttacking && !this.player.invulnerable) {
+                this.player.takeDamage(1); // 1 damage per frame? Too fast.
+                // Player has invulnerability frames built-in takeDamage.
+            }
+        }
+
+        // Win/Loss
+        if (this.player.health <= 0) {
+            // I died.
+            // Reset? Or show Dead.
+        }
+    }
+
+    private drawMultiplayer() {
+        // Draw Background
+        if (this.bossBgSkyImage.complete) {
+            this.ctx.drawImage(this.bossBgSkyImage, 0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        // Draw Remote Player
+        if (this.remotePlayer) {
+            this.remotePlayer.draw(this.ctx);
+        }
+
+        // Draw Local Player
+        if (this.player) {
+            this.player.draw(this.ctx);
+        }
+
+        // Draw UI
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '20px "Press Start 2P"';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
+    }
+
+    private checkCollision(a: any, b: any): boolean {
+        return (
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y
+        );
     }
 
 

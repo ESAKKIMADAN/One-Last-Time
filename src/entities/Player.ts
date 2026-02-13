@@ -12,7 +12,7 @@ export class Player extends Entity {
 
     public maxHealth: number = 100;
     public health: number = 100;
-    private invulnerable: boolean = false;
+    public invulnerable: boolean = false;
     private invulnerabilityDuration: number = 1000;
     private lastDamageTime: number = 0;
 
@@ -21,7 +21,7 @@ export class Player extends Entity {
     private gameFrame: number = 0;
     private staggerFrames: number = 15; // Slower animation (was 7)
     private currentFrameIndex: number = 0;
-    private state: AnimationState = AnimationState.IDLE;
+    public state: AnimationState = AnimationState.IDLE;
 
     // Sprite Configuration mapping State -> Array of Image Indices (1-based from filename)
     // 1: Standing
@@ -52,12 +52,23 @@ export class Player extends Entity {
         [AnimationState.RUN_SHOOT]: [444, 555]
     };
 
+    private bossAnimationMap: any = {
+        [AnimationState.IDLE]: [901],
+        [AnimationState.RUN]: [902, 903],
+        [AnimationState.JUMP]: [902],
+        [AnimationState.FALL]: [903],
+        [AnimationState.SHOOT]: [904, 905],
+        [AnimationState.RUN_SHOOT]: [904, 905]
+    };
+
     private animationMap: any = this.altAnimationMap;
     private isAltSkin: boolean = true;
 
     public get isAltSkinActive(): boolean {
         return this.isAltSkin;
     }
+
+    private isBossSkin: boolean = false;
 
     constructor(x: number, y: number) {
         super(x, y, 77, 173); // Increased size: 77x173 (1.2x of 64x144)
@@ -76,15 +87,40 @@ export class Player extends Entity {
             img.src = `assets/player/${i}.png`;
             this.images[i] = img;
         });
+
+        // Preload Boss Images (901-905)
+        const bossImgs = [901, 902, 903, 904, 905];
+        // 901 = 1-removebg...
+        // Map 901->1, 902->2, etc.
+        bossImgs.forEach((id, index) => {
+            const img = new Image();
+            const fileId = index + 1; // 1,2,3,4,5
+            img.src = `assets/boss/${fileId}-removebg-preview.png`;
+            this.images[id] = img;
+        });
     }
 
     public toggleCharacter() {
         this.isAltSkin = !this.isAltSkin;
+        this.isBossSkin = false;
         this.animationMap = this.isAltSkin ? this.altAnimationMap : this.defaultAnimationMap;
 
-        // Reset to Idle immediately to prevent 1-frame glitch where old frame renders with new skin flags
+        // Reset to Idle
         this.state = AnimationState.IDLE;
         this.currentFrameIndex = this.animationMap[this.state][0];
+    }
+
+    public setBossMode() {
+        this.isBossSkin = true;
+        this.isAltSkin = false;
+        this.animationMap = this.bossAnimationMap;
+
+        // Adjust hitbox if needed? (Boss is same size 77x173)
+        // Reset state
+        this.state = AnimationState.IDLE;
+        if (this.animationMap[this.state]) {
+            this.currentFrameIndex = this.animationMap[this.state][0];
+        }
     }
 
     update(dt: number, input: InputHandler, mapWidth: number): any | null {
@@ -206,7 +242,7 @@ export class Player extends Entity {
         }
 
         // Apply Scaling to match new hitbox size
-        const scale = this.isAltSkin ? 1.2 : 1.5;
+        const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.0 : 1.5);
         w *= scale;
         h *= scale;
 

@@ -3,7 +3,7 @@ import { AnimationState } from '../enums/AnimationState';
 
 export class Enemy extends Entity {
     protected speed: number = 0.5;
-    protected direction: number = 1;
+    public direction: number = 1;
     public maxHealth: number = 5;
     public health: number = 5;
     public active: boolean = true;
@@ -13,7 +13,7 @@ export class Enemy extends Entity {
     private gameFrame: number = 0;
     private staggerFrames: number = 10;
     private currentFrameIndex: number = 1;
-    protected state: AnimationState = AnimationState.IDLE;
+    public state: AnimationState = AnimationState.IDLE;
 
 
     private animationMap: any = {
