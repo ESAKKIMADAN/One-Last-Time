@@ -1588,11 +1588,11 @@ export class Game {
 
         // Setup Local Player
         // Always use Player class for control, but change appearance if Boss
-        this.player = new Player(200, 360);
+        this.player = new Player(100, 360);
 
         if (role === 'player') {
-            // Ensure correct skin - 111.png is Alt Skin
-            if (!this.player.isAltSkinActive) this.player.toggleCharacter();
+            // Ensure correct skin - Use default skin for 'player' role (Story Mode style)
+            if (this.player.isAltSkinActive) this.player.toggleCharacter();
         } else {
             // Boss Role
             this.player.setBossMode();

@@ -63,6 +63,9 @@ export class MultiplayerService {
                 const userIds = Object.keys(state);
                 console.log('Presence sync:', userIds);
 
+                // Identify Opponent
+                this.opponentId = userIds.find(id => id !== this.playerId) || null;
+
                 if (this.onPlayerJoined) this.onPlayerJoined(userIds.length);
 
                 // Determine Host (first user/lowest ID logic or just first to appear)
@@ -79,8 +82,7 @@ export class MultiplayerService {
                     // Better: The one who sends 'START_GAME' is host. 
                 }
 
-                // Identify Opponent
-                this.opponentId = userIds.find(id => id !== this.playerId) || null;
+                // Identify Opponent - Already done above
             })
             .on('broadcast', { event: 'game_update' }, (payload: any) => {
                 if (this.onGameStateUpdate) this.onGameStateUpdate(payload.payload);
