@@ -250,14 +250,12 @@ export class Game {
         if (this.gameState !== GameState.START_SCREEN) return;
 
         // Stop Title Music
-        this.bgMusic.pause();
-        this.bgMusic.currentTime = 0;
+        if (this.bgMusic) {
+            this.bgMusic.pause();
+            this.bgMusic.currentTime = 0;
+        }
 
-        // switch to VIDEO_INTRO
-        this.gameState = GameState.VIDEO_INTRO;
-        this.toggleCooldown = 500;
-
-        // Hide UI Elements
+        // Hide UI Elements Immediately
         const logoutBtn = document.getElementById('btn-logout');
         const trophyBtn = document.getElementById('btn-trophy');
         const fullscreenBtn = document.getElementById('btn-fullscreen');
@@ -270,17 +268,20 @@ export class Game {
             this.toggleFullscreen();
         }
 
-        if (this.videoElement) {
-            this.videoElement.style.display = 'block';
-            this.videoElement.style.opacity = '1';
-            this.videoElement.play().catch(e => {
-                console.error("Video play failed:", e);
-                this.videoElement.style.display = 'none';
-                this.startDialogue();
-            });
-        } else {
-            this.startDialogue();
-        }
+        this.triggerTransition(() => {
+            this.gameState = GameState.VIDEO_INTRO;
+            this.toggleCooldown = 500;
+            if (this.videoElement) {
+                this.videoElement.style.display = 'block';
+                this.videoElement.style.opacity = '1'; // Ensure it's visible after fade
+                this.videoElement.play().catch(e => {
+                    console.warn("Video autoplay failed:", e);
+                    this.advanceState();
+                });
+            } else {
+                this.advanceState();
+            }
+        });
     }
 
     private toggleFullscreen() {
@@ -1572,6 +1573,19 @@ export class Game {
     private initializeMultiplayerRound(role: 'player' | 'boss') {
         const uiLayer = document.getElementById('ui-layer');
         if (uiLayer) uiLayer.style.display = 'none';
+
+        const lobbyUI = document.getElementById('lobby-ui');
+        if (lobbyUI) lobbyUI.style.display = 'none';
+
+        // Force Fullscreen for mobile in 1v1
+        if (this.isMobile()) {
+            this.toggleFullscreen();
+        }
+
+        // Pause Title Music
+        if (this.bgMusic) {
+            this.bgMusic.pause();
+        }
 
         this.isMultiplayer = true;
         this.gameState = GameState.MULTIPLAYER_MATCH;
