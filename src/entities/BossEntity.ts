@@ -83,19 +83,20 @@ export class Boss extends Enemy {
             renderW = renderH * ratio;
         }
 
-        ctx.save();
-
-        if (this.direction === -1) {
-            // Flip for Left
-            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-            ctx.scale(-1, 1);
-            ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
-        } else {
-            // Face Right (Normal)
-            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-            ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
+        if (currentImage.complete && currentImage.naturalWidth > 0) {
+            ctx.save();
+            if (this.direction === -1) {
+                // Flip for Left
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                ctx.scale(-1, 1);
+                ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
+            } else {
+                // Face Right (Normal)
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                ctx.drawImage(currentImage, -renderW / 2, -renderH / 2, renderW, renderH);
+            }
+            ctx.restore();
         }
-        ctx.restore();
 
 
         // Draw Health Bar (Big)

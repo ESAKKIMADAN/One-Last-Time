@@ -203,7 +203,8 @@ export class Player extends Entity {
     }
 
     public updateAnimation(deltaTime: number) {
-        this.gameFrame++;
+        // DeltaTime based animation (assuming 60fps base)
+        this.gameFrame += deltaTime / (1000 / 60);
         const frameIndices = this.animationMap[this.state];
         if (frameIndices && frameIndices.length > 0) {
             const pos = Math.floor(this.gameFrame / this.staggerFrames) % frameIndices.length;

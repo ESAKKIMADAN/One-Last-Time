@@ -1521,9 +1521,7 @@ export class Game {
             const w = this.healthBar.naturalWidth * barScale;
             const h = this.healthBar.naturalHeight * barScale;
 
-            // Calculate Fill Area (Trial & Error estimation based on standard pixel art health bars)
-            // Assuming Heart is ~25% width, and there's a margin.
-            // Let's position the fill relatively.
+            // Calculate Fill Area
             const fillX = barX + (w * 0.26);
             const fillY = barY + (h * 0.25);
             const fillW = (w * 0.71);
@@ -1538,14 +1536,6 @@ export class Game {
 
             // Draw Frame on Top
             this.ctx.drawImage(this.healthBar, barX, barY, w, h);
-
-            // Draw Fade Overlay
-            if (this.fadeOpacity > 0) {
-                this.ctx.globalAlpha = this.fadeOpacity;
-                this.ctx.fillStyle = '#000000';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.globalAlpha = 1.0; // Reset alpha
-            }
         }
 
     }
@@ -1630,6 +1620,13 @@ export class Game {
             if (!this.remotePlayer) {
                 this.remotePlayer = new Player(pState.x, pState.y);
                 this.remotePlayer.multiplayerMode = true;
+            }
+
+            // Sync Skin
+            if (pState.isAltSkin && !this.remotePlayer.isAltSkinActive) {
+                this.remotePlayer.toggleCharacter();
+            } else if (!pState.isAltSkin && this.remotePlayer.isAltSkinActive) {
+                this.remotePlayer.toggleCharacter();
             }
 
             // Sync Skin
@@ -1747,7 +1744,8 @@ export class Game {
 
     private drawMultiplayer() {
         // Draw Background
-        if (this.bossBgSkyImage.complete) {
+        // Draw Background
+        if (this.bossBgSkyImage.complete && this.bossBgSkyImage.naturalWidth > 0) {
             this.ctx.drawImage(this.bossBgSkyImage, 0, 0, this.canvas.width, this.canvas.height);
         }
 
