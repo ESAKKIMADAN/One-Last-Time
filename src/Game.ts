@@ -1633,19 +1633,17 @@ export class Game {
             }
 
             // Sync Skin
-            const rp = this.remotePlayer as Player;
-            if (pState.characterType === 'boss') {
-                if (!rp.isBossSkin) rp.setBossMode();
-            } else {
-                if (rp.isBossSkin) rp.toggleCharacter();
-                // Basic Player skin logic: Story mode uses default, some others use 111.png
-                if (rp.isAltSkinActive) {
-                    // If it's the 111.png skin, stay there. 
-                    // The local character initialization handles 'player' vs 'boss'
-                }
+            if (pState.isAltSkin && !this.remotePlayer.isAltSkinActive) {
+                this.remotePlayer.toggleCharacter();
+            } else if (!pState.isAltSkin && this.remotePlayer.isAltSkinActive) {
+                this.remotePlayer.toggleCharacter();
             }
 
-            // Sync Properties
+            if (pState.characterType === 'boss' && !this.remotePlayer.isBossSkin) {
+                this.remotePlayer.setBossMode();
+            }
+
+            // Sync Stats
             this.remotePlayer.x = pState.x;
             this.remotePlayer.y = pState.y;
             this.remotePlayer.facing = pState.facing;
@@ -1656,6 +1654,11 @@ export class Game {
 
     private updateMultiplayer(deltaTime: number) {
         if (!this.player) return;
+
+        // Update remote animation
+        if (this.remotePlayer) {
+            this.remotePlayer.updateAnimation(deltaTime);
+        }
 
         // 1. Update Local Player (Movement/Input)
         // Fix: Pass canvas width for 1v1 mode boundaries instead of cameraX
@@ -1671,6 +1674,7 @@ export class Game {
             hp: this.player.health,
             isAttacking: this.player.state === AnimationState.SHOOT,
             characterType: (this.player as Player).isBossSkin ? 'boss' : 'player',
+            isAltSkin: this.player.isAltSkinActive,
             roundWins: this.mpWins
         };
 

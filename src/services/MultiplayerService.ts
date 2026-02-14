@@ -10,6 +10,7 @@ export interface PlayerState {
     hp: number;
     isAttacking: boolean;
     characterType: 'player' | 'boss'; // 'player' = 111.png, 'boss' = Boss
+    isAltSkin: boolean;
     roundWins: number;
 }
 

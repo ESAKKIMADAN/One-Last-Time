@@ -185,7 +185,14 @@ export class Player extends Entity {
         if (this.y + this.height < floorTop) this.y = floorTop - this.height;
         if (this.y + this.height > floorBottom) this.y = floorBottom - this.height;
 
-        // Update Animation State
+        // Update Animation
+        this.updateAnimationState(isMoving, isShooting);
+        this.updateAnimation(dt);
+
+        return null;
+    }
+
+    public updateAnimationState(isMoving: boolean, isShooting: boolean) {
         if (isShooting) {
             this.state = AnimationState.SHOOT;
         } else if (isMoving) {
@@ -193,8 +200,9 @@ export class Player extends Entity {
         } else {
             this.state = AnimationState.IDLE;
         }
+    }
 
-        // Animation Frame Update
+    public updateAnimation(deltaTime: number) {
         this.gameFrame++;
         const frameIndices = this.animationMap[this.state];
         if (frameIndices && frameIndices.length > 0) {
@@ -203,8 +211,6 @@ export class Player extends Entity {
         } else {
             this.currentFrameIndex = 1; // Default
         }
-
-        return null;
     }
 
     // Check if currently punching (Alt skin + Shoot state)
