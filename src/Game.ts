@@ -1597,15 +1597,15 @@ export class Game {
         if (role === 'player') {
             // Player Role: Spawn Left, Face Right
             this.player = new Player(100, 360);
+            this.player.multiplayerMode = true;
             this.player.facing = 1;
 
-            // Ensure correct skin - Use default skin for 'player' role (Story Mode style)
-            if (this.player.isAltSkinActive) this.player.toggleCharacter();
+            // Ensure correct skin - Use Alt skin for 'player' role in 1v1
+            if (!this.player.isAltSkinActive) this.player.toggleCharacter();
         } else {
             // Boss Role: Spawn Right, Face Left
-            // Use safe standard width (800) reference if canvas is huge/unset
-            // or just a fixed logical coordinate guaranteed to be in view.
             this.player = new Player(600, 360);
+            this.player.multiplayerMode = true;
             this.player.setBossMode();
             this.player.facing = -1;
         }
@@ -1629,6 +1629,7 @@ export class Game {
             // Initialize Remote Player if needed - Always use Player class for unification
             if (!this.remotePlayer) {
                 this.remotePlayer = new Player(pState.x, pState.y);
+                this.remotePlayer.multiplayerMode = true;
             }
 
             // Sync Skin

@@ -61,8 +61,9 @@ export class Player extends Entity {
         [AnimationState.RUN_SHOOT]: [904, 905]
     };
 
-    private animationMap: any = this.altAnimationMap;
-    private isAltSkin: boolean = true;
+    private animationMap: any = this.defaultAnimationMap;
+    private isAltSkin: boolean = false;
+    public multiplayerMode: boolean = false;
 
     public get isAltSkinActive(): boolean {
         return this.isAltSkin;
@@ -79,7 +80,7 @@ export class Player extends Entity {
     private _isBossSkin: boolean = false;
 
     constructor(x: number, y: number) {
-        super(x, y, 77, 173); // Increased size: 77x173 (1.2x of 64x144)
+        super(x, y, 64, 144); // Restored to original: 64x144
 
         // Preload images 1 through 12
         for (let i = 1; i <= 12; i++) {
@@ -233,28 +234,37 @@ export class Player extends Entity {
         const drawY = Math.floor(this.y);
 
         // Standardize Rendering Size
-        // We use a target height based on the hitbox height (173) 
-        // and add some padding for visual flourish, then apply global scaling.
         const naturalW = img.naturalWidth || 64;
         const naturalH = img.naturalHeight || 144;
         const aspectRatio = naturalW / naturalH;
 
-        // Base visual height (standardized)
-        let visualHeight = 180;
+        let w: number, h: number;
 
-        if (this.isAltSkin) {
-            visualHeight = 165; // Alt skin is slightly shorter visually
-        } else if (this.isBossSkin) {
-            visualHeight = 185; // Boss skin slightly taller
+        if (this.multiplayerMode) {
+            // Balanced visual heights for 1v1
+            let visualHeight = 180;
+            if (this.isAltSkin) visualHeight = 165;
+            else if (this.isBossSkin) visualHeight = 185;
+
+            h = visualHeight;
+            w = h * aspectRatio;
+
+            // Global multiplayer scale
+            const scale = 1.5;
+            w *= scale;
+            h *= scale;
+        } else {
+            // Original Story Mode Logic
+            h = (img.naturalHeight || 144);
+            if (!this.isAltSkin && !this.isBossSkin) h += 5; // Slight boost for default
+
+            w = h * aspectRatio;
+
+            // Original relative scales
+            const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.5 : 1.5);
+            w *= scale;
+            h *= scale;
         }
-
-        let h = visualHeight;
-        let w = h * aspectRatio;
-
-        // Apply Scaling (Global multiplayer balance)
-        const scale = 1.5;
-        w *= scale;
-        h *= scale;
 
         const diffX = (w - this.width) / 2;
         const diffY = (h - this.height);
