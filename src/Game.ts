@@ -83,6 +83,7 @@ export class Game {
     private remotePlayer: Player | null = null;
     private mpRound: number = 1;
     private mpWins: number = 0;
+    private mpRemoteWins: number = 0;
     private mpRoundTransition: boolean = false;
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
@@ -1749,16 +1750,34 @@ export class Game {
 
     private handlePlayerDefeat() {
         if (this.mpRoundTransition) return;
+        this.mpRemoteWins++; // Track opponent win
         this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
-        setTimeout(() => this.resetMultiplayerRound(), 3000);
+
+        // Check Match Over (Best of 3 -> First to 2)
+        if (this.mpRemoteWins >= 2) {
+            setTimeout(() => this.endMatch(false), 3000);
+        } else {
+            setTimeout(() => this.resetMultiplayerRound(), 3000);
+        }
     }
 
     private handleRoundVictory() {
         if (this.mpRoundTransition) return;
         this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
-        setTimeout(() => this.resetMultiplayerRound(), 3000);
+
+        // Check Match Over (Best of 3 -> First to 2)
+        if (this.mpWins >= 2) {
+            setTimeout(() => this.endMatch(true), 3000);
+        } else {
+            setTimeout(() => this.resetMultiplayerRound(), 3000);
+        }
+    }
+
+    private endMatch(won: boolean) {
+        alert(won ? "MATCH WON!" : "MATCH LOST!");
+        location.reload(); // Simple reset for now
     }
 
     private resetMultiplayerRound() {
@@ -1806,43 +1825,38 @@ export class Game {
         this.ctx.textAlign = 'center';
         this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
 
-        // --- Split Health Bars ---
-        // --- Split Health Bars ---
+        // --- HUD Health Bars ---
+        const barWidth = 300;
+        const barHeight = 30;
+        const topMargin = 70;
 
-
-        // Player 1 (LOCAL)
+        // Player 1 (LOCAL) - Left
         if (this.player) {
-            this.drawHealthBarAboveHead(this.player);
+            this.drawHealthBarHUD(20, topMargin, barWidth, barHeight, this.player.health, this.player.maxHealth, "YOU");
         }
 
-        // Player 2 (REMOTE)
+        // Player 2 (REMOTE) - Right
         if (this.remotePlayer) {
-            this.drawHealthBarAboveHead(this.remotePlayer as Player);
+            this.drawHealthBarHUD(this.canvas.width - barWidth - 20, topMargin, barWidth, barHeight, this.remotePlayer.health, (this.remotePlayer as Player).maxHealth, "OPPONENT");
         }
     }
 
-    private drawHealthBarAboveHead(entity: Player) {
-        if (!entity) return;
-
-        const w = 60;
-        const h = 8;
-        const x = entity.x + (entity.width / 2) - (w / 2);
-        const y = entity.y - 20;
-
-        // Label (Optional, maybe too cluttered? Keep it small)
-        // this.ctx.fillStyle = '#fff';
-        // this.ctx.font = '10px Arial';
-        // this.ctx.textAlign = 'center';
-        // this.ctx.fillText(label, x + w / 2, y - 5);
+    private drawHealthBarHUD(x: number, y: number, w: number, h: number, health: number, max: number, label: string) {
+        // Label
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '12px "Press Start 2P"';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(label, x, y - 10);
 
         // Frame
-        this.ctx.fillStyle = '#000';
-        this.ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x, y, w, h);
 
         // Fill
-        const pct = Math.max(0, entity.health / entity.maxHealth);
-        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444';
-        this.ctx.fillRect(x, y, w * pct, h);
+        const pct = Math.max(0, health / max);
+        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444'; // Green or Red
+        this.ctx.fillRect(x + 2, y + 2, (w - 4) * pct, h - 4);
     }
 
 
