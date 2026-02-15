@@ -269,7 +269,8 @@ export class Player extends Entity {
             w = h * aspectRatio;
 
             // Original relative scales
-            const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.5 : 1.5);
+            // Restoration: User requested "Old Story Mode" size (smaller)
+            const scale = this.isAltSkin ? 1.2 : (this.isBossSkin ? 1.5 : 1.0);
             w *= scale;
             h *= scale;
         }

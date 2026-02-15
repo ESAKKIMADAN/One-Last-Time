@@ -92,6 +92,10 @@ export class Game {
         this.input = new InputHandler();
         this.multiplayer = new MultiplayerService();
         this.player = new Player(200, 100);
+        // Ensure default state
+        if (this.player.isAltSkinActive) {
+            this.player.toggleCharacter();
+        }
 
         // Load Background
         this.bgImage = new Image();
@@ -449,6 +453,9 @@ export class Game {
 
     private resetGameState() {
         this.player = new Player(100, 360);
+        // Ensure default state
+        if (this.player.isAltSkinActive) this.player.toggleCharacter();
+
         this.bullets = [];
         this.enemies = [];
         this.floatingTexts = [];
@@ -1805,16 +1812,16 @@ export class Game {
 
         // Player 1 (LOCAL)
         if (this.player) {
-            this.drawHealthBarAboveHead(this.player, "YOU");
+            this.drawHealthBarAboveHead(this.player);
         }
 
         // Player 2 (REMOTE)
         if (this.remotePlayer) {
-            this.drawHealthBarAboveHead(this.remotePlayer as Player, "OPPONENT");
+            this.drawHealthBarAboveHead(this.remotePlayer as Player);
         }
     }
 
-    private drawHealthBarAboveHead(entity: Player, label: string) {
+    private drawHealthBarAboveHead(entity: Player) {
         if (!entity) return;
 
         const w = 60;
