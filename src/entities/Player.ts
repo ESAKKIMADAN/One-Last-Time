@@ -14,7 +14,7 @@ export class Player extends Entity {
     public health: number = 100;
     public invulnerable: boolean = false;
     private invulnerabilityDuration: number = 1000;
-    private lastDamageTime: number = 0;
+    private invulnerabilityTimer: number = 0;
 
     // Animation Props
     private images: HTMLImageElement[] = [];
@@ -188,6 +188,7 @@ export class Player extends Entity {
         // Update Animation
         this.updateAnimationState(isMoving, isShooting);
         this.updateAnimation(dt);
+        this.updateInvulnerability(dt);
 
         return null;
     }
@@ -286,9 +287,24 @@ export class Player extends Entity {
 
         if (flip) {
             ctx.scale(-1, 1);
+
+            // Invulnerability Flashing
+            if (this.invulnerable && Math.floor(Date.now() / 100) % 2 === 0) {
+                ctx.globalAlpha = 0.5;
+            }
+
             ctx.drawImage(img, -drawX - this.width - diffX, drawY - diffY, w, h);
+
+            ctx.globalAlpha = 1.0; // Reset
         } else {
+            // Invulnerability Flashing
+            if (this.invulnerable && Math.floor(Date.now() / 100) % 2 === 0) {
+                ctx.globalAlpha = 0.5;
+            }
+
             ctx.drawImage(img, drawX - diffX, drawY - diffY, w, h);
+
+            ctx.globalAlpha = 1.0; // Reset
         }
         ctx.restore();
     }
@@ -300,7 +316,7 @@ export class Player extends Entity {
         if (this.health < 0) this.health = 0;
 
         this.invulnerable = true;
-        this.lastDamageTime = Date.now();
+        this.invulnerabilityTimer = this.invulnerabilityDuration;
         console.log(`Player Health: ${this.health}`);
 
         // Simple knockback
@@ -308,10 +324,12 @@ export class Player extends Entity {
         this.velocityX = -5 * this.facing;
     }
 
-    public updateInvulnerability() {
+    public updateInvulnerability(dt: number) {
         if (this.invulnerable) {
-            if (Date.now() - this.lastDamageTime > this.invulnerabilityDuration) {
+            this.invulnerabilityTimer -= dt;
+            if (this.invulnerabilityTimer <= 0) {
                 this.invulnerable = false;
+                this.invulnerabilityTimer = 0;
             }
         }
     }

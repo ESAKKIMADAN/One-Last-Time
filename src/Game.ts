@@ -83,7 +83,7 @@ export class Game {
     private remotePlayer: Player | null = null;
     private mpRound: number = 1;
     private mpWins: number = 0;
-    // private mpOpponentWins: number = 0;
+    private mpRoundTransition: boolean = false;
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
@@ -1023,7 +1023,6 @@ export class Game {
             mapWidth = this.bgImage.naturalWidth * scale;
         }
         this.player.update(deltaTime, this.input, mapWidth);
-        this.player.updateInvulnerability();
 
         // Player Shoot Input
         if (this.input.isDown('KeyF') || this.input.isDown('KeyJ')) {
@@ -1159,7 +1158,8 @@ export class Game {
         this.punchSound.play().catch(() => { });
 
         // Define Punch Hitbox (In front of player)
-        const range = 60;
+        // Define Punch Hitbox (In front of player)
+        const range = 80; // Increased from 60 for better reach
         const hitbox = {
             x: this.player.facing === 1 ? this.player.x + this.player.width : this.player.x - range,
             y: this.player.y,
@@ -1703,17 +1703,21 @@ export class Game {
 
             if (remoteAttacking && !this.player.invulnerable) {
                 // Define remote attack range
-                const range = 60;
+                const isRemoteBoss = (this.remotePlayer as Player).isBossSkin;
+                const range = isRemoteBoss ? 120 : 80;
+                const overlap = 20; // Allow hit even if slightly overlapping
+
                 const attackBox = {
-                    x: remoteFacing === 1 ? this.remotePlayer.x + this.remotePlayer.width : this.remotePlayer.x - range,
-                    y: this.remotePlayer.y,
-                    width: range,
-                    height: this.remotePlayer.height
+                    x: remoteFacing === 1 ?
+                        this.remotePlayer.x + this.remotePlayer.width - overlap :
+                        this.remotePlayer.x - range * 1.5 + overlap, // Expand backward slightly
+                    y: this.remotePlayer.y - 20, // Expand Vertical
+                    width: range * 1.5, // Wider Hitbox
+                    height: this.remotePlayer.height + 40
                 };
 
-                if (this.checkCollision(this.player, attackBox)) {
-                    this.player.takeDamage(10); // Take 10 damage per hit
-                    // Note: player.takeDamage adds invulnerability frames
+                if (this.isColliding(this.player, attackBox)) {
+                    this.player.takeDamage(10);
                 }
             }
 
@@ -1724,32 +1728,34 @@ export class Game {
         }
 
         // Win/Loss Check
+        if (this.mpRoundTransition) return;
+
         if (this.player.health <= 0 && this.gameState === GameState.MULTIPLAYER_MATCH) {
-            // I lost the round
-            // We broadcast HP 0, the other player will detect it.
             this.handlePlayerDefeat();
         }
 
         if (this.remotePlayer && this.remotePlayer.health <= 0 && this.gameState === GameState.MULTIPLAYER_MATCH) {
-            // I won the round
             this.mpWins++;
             this.handleRoundVictory();
         }
     }
 
     private handlePlayerDefeat() {
-        // Show "LOSER" text and reset after delay
+        if (this.mpRoundTransition) return;
+        this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
         setTimeout(() => this.resetMultiplayerRound(), 3000);
     }
 
     private handleRoundVictory() {
-        // Show "WINNER" text and reset after delay
+        if (this.mpRoundTransition) return;
+        this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
         setTimeout(() => this.resetMultiplayerRound(), 3000);
     }
 
     private resetMultiplayerRound() {
+        this.mpRoundTransition = false;
         this.mpRound++;
         // Re-init positions
         const role = (this.player as Player).isBossSkin ? 'boss' : 'player';
@@ -1794,48 +1800,45 @@ export class Game {
         this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
 
         // --- Split Health Bars ---
-        const barWidth = 300;
-        const barHeight = 30;
-        const topMargin = 70;
+        // --- Split Health Bars ---
 
-        // Player 1 (LOCAL) - Left
-        const p1X = 50;
-        this.drawHealthBarHUD(p1X, topMargin, barWidth, barHeight, this.player.health, this.player.maxHealth, "YOU");
 
-        // Player 2 (REMOTE) - Right
+        // Player 1 (LOCAL)
+        if (this.player) {
+            this.drawHealthBarAboveHead(this.player, "YOU");
+        }
+
+        // Player 2 (REMOTE)
         if (this.remotePlayer) {
-            const p2X = this.canvas.width - barWidth - 50;
-            const rp = this.remotePlayer as Player;
-            this.drawHealthBarHUD(p2X, topMargin, barWidth, barHeight, rp.health, rp.maxHealth, "OPPONENT");
+            this.drawHealthBarAboveHead(this.remotePlayer as Player, "OPPONENT");
         }
     }
 
-    private drawHealthBarHUD(x: number, y: number, w: number, h: number, health: number, max: number, label: string) {
-        // Label
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '12px "Press Start 2P"';
-        this.ctx.textAlign = 'left';
-        this.ctx.fillText(label, x, y - 10);
+    private drawHealthBarAboveHead(entity: Player, label: string) {
+        if (!entity) return;
+
+        const w = 60;
+        const h = 8;
+        const x = entity.x + (entity.width / 2) - (w / 2);
+        const y = entity.y - 20;
+
+        // Label (Optional, maybe too cluttered? Keep it small)
+        // this.ctx.fillStyle = '#fff';
+        // this.ctx.font = '10px Arial';
+        // this.ctx.textAlign = 'center';
+        // this.ctx.fillText(label, x + w / 2, y - 5);
 
         // Frame
-        this.ctx.strokeStyle = '#fff';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(x, y, w, h);
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
 
         // Fill
-        const pct = Math.max(0, health / max);
-        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444'; // Green or Red
-        this.ctx.fillRect(x + 2, y + 2, (w - 4) * pct, h - 4);
+        const pct = Math.max(0, entity.health / entity.maxHealth);
+        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444';
+        this.ctx.fillRect(x, y, w * pct, h);
     }
 
-    private checkCollision(a: any, b: any): boolean {
-        return (
-            a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
-            a.y + a.height > b.y
-        );
-    }
+
 
 
 
