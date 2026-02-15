@@ -1604,6 +1604,10 @@ export class Game {
         this.enemies = []; // Clear AI enemies
         this.remotePlayer = null; // Clear remote player
 
+        // Start Gameplay Music
+        this.gameplayMusic.currentTime = 0;
+        this.gameplayMusic.play().catch(e => console.warn("Music failed to play:", e));
+
         // Setup Local Player
         // Always use Player class for control, but change appearance if Boss
         if (role === 'player') {
@@ -1726,6 +1730,8 @@ export class Game {
 
                 if (this.isColliding(this.player, attackBox)) {
                     this.player.takeDamage(10);
+                    this.punchSound.currentTime = 0;
+                    this.punchSound.play().catch(() => { });
                 }
             }
 
@@ -1850,7 +1856,8 @@ export class Game {
         const w = 40; // Small width
         const h = 6;  // Small height
         const x = entity.x + (entity.width / 2) - (w / 2);
-        const y = entity.y - 15; // Just above head
+        // Adjusted to Neck/Chest area as requested
+        const y = entity.y + 45;
 
         // Background (Red)
         this.ctx.fillStyle = '#ef4444';
