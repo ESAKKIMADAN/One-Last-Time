@@ -784,6 +784,14 @@ export class Game {
         this.boss = null;
         this.instructionDismissed = false; // Reset instruction state for new level/restart
 
+        // Safety: Ensure Normal Skin for Level 1
+        if (level === 1) {
+            this.powerUnlocked = false;
+            if (this.player.isAltSkinActive) {
+                this.player.toggleCharacter();
+            }
+        }
+
         if (level === 5) {
             console.log("BOSS LEVEL!");
             // Play Boss Appearance Sound
