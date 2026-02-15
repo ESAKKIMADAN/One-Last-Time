@@ -1778,8 +1778,8 @@ export class Game {
         this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
 
-        // Check Match Over (Best of 3 -> First to 2)
-        if (this.mpRemoteWins >= 2) {
+        // Check Match Over (Best of 5 -> First to 3)
+        if (this.mpRemoteWins >= 3) {
             setTimeout(() => this.endMatch(false), 3000);
         } else {
             setTimeout(() => this.resetMultiplayerRound(), 3000);
@@ -1791,8 +1791,8 @@ export class Game {
         this.mpRoundTransition = true;
         this.gameState = GameState.MULTIPLAYER_END;
 
-        // Check Match Over (Best of 3 -> First to 2)
-        if (this.mpWins >= 2) {
+        // Check Match Over (Best of 5 -> First to 3)
+        if (this.mpWins >= 3) {
             setTimeout(() => this.endMatch(true), 3000);
         } else {
             setTimeout(() => this.resetMultiplayerRound(), 3000);
@@ -1854,6 +1854,8 @@ export class Game {
         this.ctx.font = '20px "Press Start 2P"';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
+        this.ctx.font = '12px "Press Start 2P"';
+        this.ctx.fillText(`Best of 5`, this.canvas.width / 2, 70);
 
         // --- Health Bars (Small, Above Head) ---
 
