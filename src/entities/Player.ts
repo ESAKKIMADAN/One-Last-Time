@@ -33,23 +33,27 @@ export class Player extends Entity {
     // 11: Showing Gun
     // 12: Shooting Gun
 
-    // Old Map
-    private defaultAnimationMap: any = {
-        [AnimationState.IDLE]: [1],
-        [AnimationState.RUN]: [2, 3, 4, 5, 6],
-        [AnimationState.JUMP]: [7],    // Start Jump (Rising)
-        [AnimationState.FALL]: [8],    // Air/Landing (Falling)
-        [AnimationState.SHOOT]: [10, 11, 12, 12], // Take -> Show -> Fire -> Recoil
-        [AnimationState.RUN_SHOOT]: [11]
-    };
 
-    private altAnimationMap: any = {
+
+    // New Map -> Now Default (Main Hero - 111.png)
+    // Default Map (Main Hero - 111.png series)
+    private defaultAnimationMap: any = {
         [AnimationState.IDLE]: [222],
         [AnimationState.RUN]: [111, 222],
         [AnimationState.JUMP]: [333],
         [AnimationState.FALL]: [333],
         [AnimationState.SHOOT]: [444, 555],
         [AnimationState.RUN_SHOOT]: [444, 555]
+    };
+
+    // Alt Map (Special Skin - Black Shirt - 1.png series)
+    private altAnimationMap: any = {
+        [AnimationState.IDLE]: [1],
+        [AnimationState.RUN]: [2, 3, 4, 5, 6],
+        [AnimationState.JUMP]: [7],    // Start Jump (Rising)
+        [AnimationState.FALL]: [8],    // Air/Landing (Falling)
+        [AnimationState.SHOOT]: [10, 11, 12, 12], // Take -> Show -> Fire -> Recoil
+        [AnimationState.RUN_SHOOT]: [11]
     };
 
     private bossAnimationMap: any = {
@@ -82,30 +86,27 @@ export class Player extends Entity {
     constructor(x: number, y: number) {
         super(x, y, 64, 144); // Restored to original: 64x144
 
-        // Preload images 1 through 12
+        // Preload Special Skin images (1 through 12)
         for (let i = 1; i <= 12; i++) {
             const img = new Image();
             img.src = `assets/player/${i}.png`;
-            this.images[i] = img; // Store at index matching filename
+            this.images[i] = img;
         }
 
-        // Preload Alt images
-        const altImages = [111, 222, 333, 444, 555];
-        altImages.forEach(i => {
+        // Preload Default Skin images (111, 222, etc.)
+        const defaultImages = [111, 222, 333, 444, 555];
+        defaultImages.forEach(i => {
             const img = new Image();
             img.src = `assets/player/${i}.png`;
             this.images[i] = img;
         });
 
-        // Preload Boss Images (901-905)
-        const bossImgs = [901, 902, 903, 904, 905];
-        // 901 = 1-removebg...
-        // Map 901->1, 902->2, etc.
-        bossImgs.forEach((id, index) => {
+        // Preload Boss Skin images
+        const bossImages = [901, 902, 903, 904, 905];
+        bossImages.forEach(i => {
             const img = new Image();
-            const fileId = index + 1; // 1,2,3,4,5
-            img.src = `assets/boss/${fileId}-removebg-preview.png`;
-            this.images[id] = img;
+            img.src = `assets/player/${i}.png`;
+            this.images[i] = img;
         });
     }
 

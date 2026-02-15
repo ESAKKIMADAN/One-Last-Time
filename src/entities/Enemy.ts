@@ -23,7 +23,7 @@ export class Enemy extends Entity {
     };
 
     constructor(x: number, y: number, public type: number = 1) {
-        super(x, y, 77, 173); // Using same size as player for consistency
+        super(x, y, 64, 144); // Reduced from 77x173 to standard player size
 
         // Preload images based on type
         // Type 1: assets/Enemey1/${i}-removebg-preview (1).png
