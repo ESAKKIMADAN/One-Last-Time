@@ -388,6 +388,10 @@ export class Game {
     }
 
     public returnToTitle() {
+        if (this.isMultiplayer) {
+            this.multiplayer.leaveRoom(); // async but we don't wait
+            this.isMultiplayer = false;
+        }
         this.resetGameState();
         this.gameState = GameState.START_SCREEN;
         this.toggleCooldown = 1500;
@@ -1691,7 +1695,7 @@ export class Game {
         // Check for Match End Timer
         if (this.mpMatchResult && this.mpMatchEndTime > 0) {
             if (Date.now() > this.mpMatchEndTime + 10000) {
-                location.reload();
+                this.returnToTitle();
             }
             return; // Stop updating game logic during end screen
         }
