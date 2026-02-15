@@ -85,6 +85,8 @@ export class Game {
     private mpWins: number = 0;
     private mpRemoteWins: number = 0;
     private mpRoundTransition: boolean = false;
+    private mpMatchResult: 'VICTORY' | 'DEFEAT' | null = null;
+    private mpMatchEndTime: number = 0;
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         this.canvas = canvas;
@@ -1686,6 +1688,14 @@ export class Game {
     private updateMultiplayer(deltaTime: number) {
         if (!this.player) return;
 
+        // Check for Match End Timer
+        if (this.mpMatchResult && this.mpMatchEndTime > 0) {
+            if (Date.now() > this.mpMatchEndTime + 10000) {
+                location.reload();
+            }
+            return; // Stop updating game logic during end screen
+        }
+
         // Update remote animation
         if (this.remotePlayer) {
             this.remotePlayer.updateAnimation(deltaTime);
@@ -1793,11 +1803,11 @@ export class Game {
         if (won) {
             this.score += 500; // Bonus for winning 1v1
             await this.saveScore();
-            alert(`MATCH WON! +500 Points\nTotal Score: ${this.score}`);
+            this.mpMatchResult = 'VICTORY';
         } else {
-            alert("MATCH LOST!");
+            this.mpMatchResult = 'DEFEAT';
         }
-        location.reload(); // Simple reset for now
+        this.mpMatchEndTime = Date.now();
     }
 
     private resetMultiplayerRound() {
@@ -1855,6 +1865,35 @@ export class Game {
         // Player 2 (REMOTE)
         if (this.remotePlayer) {
             this.drawHealthBarAboveHead(this.remotePlayer as Player);
+        }
+
+        // --- MATCH RESULT SCREEN ---
+        if (this.mpMatchResult) {
+            // Semi-transparent overlay
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            this.ctx.textAlign = 'center';
+
+            if (this.mpMatchResult === 'VICTORY') {
+                this.ctx.fillStyle = '#22c55e'; // Green
+                this.ctx.font = '60px "Press Start 2P"';
+                this.ctx.fillText("VICTORY", this.canvas.width / 2, this.canvas.height / 2 - 20);
+
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.font = '20px "Press Start 2P"';
+                this.ctx.fillText("+500 POINTS", this.canvas.width / 2, this.canvas.height / 2 + 30);
+            } else {
+                this.ctx.fillStyle = '#ef4444'; // Red
+                this.ctx.font = '60px "Press Start 2P"';
+                this.ctx.fillText("DEFEAT", this.canvas.width / 2, this.canvas.height / 2);
+            }
+
+            // Countdown
+            const timeLeft = Math.ceil((10000 - (Date.now() - this.mpMatchEndTime)) / 1000);
+            this.ctx.fillStyle = '#9ca3af'; // Gray
+            this.ctx.font = '12px "Press Start 2P"';
+            this.ctx.fillText(`Returning to Title in ${timeLeft}...`, this.canvas.width / 2, this.canvas.height - 50);
         }
     }
 
