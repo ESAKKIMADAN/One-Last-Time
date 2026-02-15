@@ -1775,8 +1775,14 @@ export class Game {
         }
     }
 
-    private endMatch(won: boolean) {
-        alert(won ? "MATCH WON!" : "MATCH LOST!");
+    private async endMatch(won: boolean) {
+        if (won) {
+            this.score += 500; // Bonus for winning 1v1
+            await this.saveScore();
+            alert(`MATCH WON! +500 Points\nTotal Score: ${this.score}`);
+        } else {
+            alert("MATCH LOST!");
+        }
         location.reload(); // Simple reset for now
     }
 
