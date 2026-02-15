@@ -1626,10 +1626,10 @@ export class Game {
     private handleRemoteUpdate(state: GameStateUpdate) {
         if (!this.isMultiplayer) return;
 
-        // Sync Round Info
-        if (state.round > this.mpRound) {
-            this.mpRound = state.round;
-        }
+        // Sync Round Info - REMOVED to prevent double increment (1 -> 3)
+        // if (state.round > this.mpRound) {
+        //    this.mpRound = state.round;
+        // }
 
         const myId = this.multiplayer.getPlayerId();
 
@@ -1825,38 +1825,37 @@ export class Game {
         this.ctx.textAlign = 'center';
         this.ctx.fillText(`ROUND ${this.mpRound}`, this.canvas.width / 2, 50);
 
-        // --- HUD Health Bars ---
-        const barWidth = 300;
-        const barHeight = 30;
-        const topMargin = 70;
+        // --- Health Bars (Small, Above Head) ---
 
-        // Player 1 (LOCAL) - Left
+        // Player 1 (LOCAL)
         if (this.player) {
-            this.drawHealthBarHUD(20, topMargin, barWidth, barHeight, this.player.health, this.player.maxHealth, "YOU");
+            this.drawHealthBarAboveHead(this.player);
         }
 
-        // Player 2 (REMOTE) - Right
+        // Player 2 (REMOTE)
         if (this.remotePlayer) {
-            this.drawHealthBarHUD(this.canvas.width - barWidth - 20, topMargin, barWidth, barHeight, this.remotePlayer.health, (this.remotePlayer as Player).maxHealth, "OPPONENT");
+            this.drawHealthBarAboveHead(this.remotePlayer as Player);
         }
     }
 
-    private drawHealthBarHUD(x: number, y: number, w: number, h: number, health: number, max: number, label: string) {
-        // Label
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '12px "Press Start 2P"';
-        this.ctx.textAlign = 'left';
-        this.ctx.fillText(label, x, y - 10);
+    private drawHealthBarAboveHead(entity: Player) {
+        if (!entity) return;
 
-        // Frame
-        this.ctx.strokeStyle = '#fff';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(x, y, w, h);
+        const w = 40; // Small width
+        const h = 6;  // Small height
+        const x = entity.x + (entity.width / 2) - (w / 2);
+        const y = entity.y - 15; // Just above head
 
-        // Fill
-        const pct = Math.max(0, health / max);
-        this.ctx.fillStyle = pct > 0.3 ? '#22c55e' : '#ef4444'; // Green or Red
-        this.ctx.fillRect(x + 2, y + 2, (w - 4) * pct, h - 4);
+        // Background (Red)
+        this.ctx.fillStyle = '#ef4444';
+        this.ctx.fillRect(x, y, w, h);
+
+        // Foreground (Green)
+        const pct = Math.max(0, entity.health / entity.maxHealth);
+        this.ctx.fillStyle = '#22c55e';
+        this.ctx.fillRect(x, y, w * pct, h);
+
+        // No Frame or Text, just the bar
     }
 
 
